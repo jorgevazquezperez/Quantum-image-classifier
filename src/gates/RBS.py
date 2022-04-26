@@ -15,9 +15,9 @@ class RBS:
         a = np.cos(theta)
         b = np.sin(theta)
         self.rbs = qi.Operator([ [1, 0,  0, 0],
-                            [0, a,  b, 0],
-                            [0, -b, a, 0],
-                            [0, 0,  0, 1]])
+                                 [0, a,  b, 0],
+                                 [0, -b, a, 0],
+                                 [0, 0,  0, 1]])
         
     @property
     def rbs(self):

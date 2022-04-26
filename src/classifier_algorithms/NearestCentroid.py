@@ -1,6 +1,6 @@
 import numpy as np
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
-from qiskit import BasicAer, transpile
+from qiskit import Aer, transpile
 from qiskit.tools.visualization import plot_histogram
 
 from encoding.DC_Amplitude_Encoding import DC_Amplitude_Encoding
@@ -9,8 +9,8 @@ class NearestCentroid:
 
 
     def __init__(self, x: np.array, y: np.array):
-        circ_x = DC_Amplitude_Encoding(x).get_circuit()
-        circ_y = DC_Amplitude_Encoding(y).get_circuit().reverse_ops()
+        circ_x = DC_Amplitude_Encoding(x).circ
+        circ_y = DC_Amplitude_Encoding(y).circ.reverse_ops()
 
         qregisters = QuantumRegister(len(x), "q")
         cregisters = ClassicalRegister(1, "c")
@@ -22,46 +22,34 @@ class NearestCentroid:
 
         self.circ.measure(qregisters[0], cregisters[0])
 
-        print(self.circ)
+    @property
+    def circ(self):
+        return self._circ
+    
+    @circ.setter
+    def circ(self, circuit: QuantumCircuit):
+        self._circ = circuit
     
     def quantum_distance(self, x, y, repetitions=1000):
-
         norm_x = np.linalg.norm(x)
         norm_y = np.linalg.norm(y)
         inner = self._quantum_inner(x, y, repetitions)
         dist = np.sqrt(norm_x**2 + norm_y**2 - 2 * norm_x * norm_y * inner)
         return dist
 
-    """
-    def _quantum_inner(x, y, repetitions=1000):
-        qubits = cirq.LineQubit.range(len(x))
-        gates_x = cirq.decompose(VectorLoader(x)(*qubits))
-        gates_y = cirq.decompose(VectorLoader(y, x_flip=False)(*qubits)**-1)
-        circuit = cirq.Circuit(gates_x + gates_y, cirq.measure(qubits[0]))
-        simulator = cirq.Simulator()
-        measurements = simulator.run(circuit, repetitions=repetitions)
-        total = measurements.histogram(key='0')[1]
-        inner = np.sqrt(total / repetitions)
-        return inner
-    """
-    
+    def classical_distance(self, x, y):
+        norm_x = np.linalg.norm(x)
+        norm_y = np.linalg.norm(y)
+        dist = np.sqrt(norm_x**2 + norm_y**2 - 2 * norm_x * norm_y * np.dot(x / norm_x, y / norm_y))
+        return dist
 
     def _quantum_inner(self, x, y, repetitions=1000):
-        backend = BasicAer.get_backend('qasm_simulator')
-        self.circ = transpile(self.circ, backend)
-        job = backend.run(self.circ, shots= repetitions)
-        counts = job.result().get_counts(0)
+        simulator = Aer.get_backend('aer_simulator')
+        self.circ = transpile(self.circ, simulator)
+        result = simulator.run(self.circ, shots= repetitions).result()
+        counts = result.get_counts(self.circ)
         if '1' in counts.keys():
             z = counts['1'] / repetitions
         else:
             z = 0
         return z
-
-        
-    
-    def _quantum_distance(self, x, y, repetitions=1000):
-        norm_x = np.linalg.norm(x)
-        norm_y = np.linalg.norm(y)
-        dist = np.sqrt(norm_x**2 + norm_y**2 -
-                    2 * norm_x * norm_y * self.quantum_inner(x, y))
-        return dist
