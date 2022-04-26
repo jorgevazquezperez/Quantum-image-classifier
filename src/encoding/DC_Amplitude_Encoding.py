@@ -4,6 +4,7 @@ from qiskit import QuantumRegister, QuantumCircuit
 from encoding.Encoding import Encoding
 from encoding.bin_tree import bin_tree
 from gates.iRBS import iRBS
+from gates.RBS import RBS
 
 class DC_Amplitude_Encoding(Encoding):
     tree = None
@@ -20,7 +21,6 @@ class DC_Amplitude_Encoding(Encoding):
 
     def _dc_generate_circuit(self, betas):
         k = 0
-        linear_angles = []
         """
         for angles in betas:
             linear_angles = linear_angles + angles
@@ -31,7 +31,8 @@ class DC_Amplitude_Encoding(Encoding):
         for beta in betas:
             k = self.num_qubits // len(beta)
             for i in range(len(beta)):
-                self.qcircuit.append(iRBS(beta[i]), [self.quantum_data[k*i], self.quantum_data[k*i + k // 2]], [])        
+                #self.qcircuit.append(iRBS(beta[i]), [self.quantum_data[k*i], self.quantum_data[k*i + k // 2]], [])
+                self.qcircuit.unitary(RBS(beta[i]).rbs, [self.quantum_data[k*i], self.quantum_data[k*i + k // 2]], label="RBS")  
         
     
     def get_circuit(self):

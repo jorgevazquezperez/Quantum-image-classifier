@@ -1,6 +1,7 @@
 import numpy as np
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit import BasicAer, transpile
+from qiskit.tools.visualization import plot_histogram
 
 from encoding.DC_Amplitude_Encoding import DC_Amplitude_Encoding
 
@@ -47,10 +48,15 @@ class NearestCentroid:
 
     def _quantum_inner(self, x, y, repetitions=1000):
         backend = BasicAer.get_backend('qasm_simulator')
-        #circ = transpile(self.circ, backend)
-        job = backend.run(self.circ)
+        self.circ = transpile(self.circ, backend)
+        job = backend.run(self.circ, shots= repetitions)
         counts = job.result().get_counts(0)
-        print(counts)
+        if '1' in counts.keys():
+            z = counts['1'] / repetitions
+        else:
+            z = 0
+        return z
+
         
     
     def _quantum_distance(self, x, y, repetitions=1000):
