@@ -35,13 +35,13 @@ class NearestCentroid:
         norm_y = np.linalg.norm(y)
         inner = self._quantum_inner(x, y, repetitions)
         dist = np.sqrt(norm_x**2 + norm_y**2 - 2 * norm_x * norm_y * inner)
-        return dist
+        return inner
 
     def classical_distance(self, x, y):
         norm_x = np.linalg.norm(x)
         norm_y = np.linalg.norm(y)
         dist = np.sqrt(norm_x**2 + norm_y**2 - 2 * norm_x * norm_y * np.dot(x / norm_x, y / norm_y))
-        return dist
+        return np.dot(x / norm_x, y / norm_y)
 
     def _quantum_inner(self, x, y, repetitions=1000):
         simulator = Aer.get_backend('aer_simulator')
@@ -52,4 +52,4 @@ class NearestCentroid:
             z = counts['1'] / repetitions
         else:
             z = 0
-        return z
+        return np.sqrt(z)

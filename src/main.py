@@ -2,20 +2,22 @@ import numpy as np
 from classifier_algorithms.NearestCentroid import NearestCentroid
 from encoding.Encoding import Encoding
 
-#x = np.random.rand(1,8).flatten()
-#y = np.random.rand(1,8).flatten()
-
-x = np.array([1, 2, 0, 0, 3, 4, 1, 1])
+a = np.array(np.random.randint(5, size=8))
+b = np.array(np.random.randint(5, size=8))
 
 
-y = np.array([0, 1, 0, 1, 2, 0, 0, 2])
+x = np.array([4, 2, 4, 4, 0, 4, 4, 2])
+y = np.array([3, 1, 1, 2, 2, 2, 1, 0])
+
+print(a, b)
+print(x, y)
 
 betas = []
-#nearest_centroid = NearestCentroid(x, y)
-Encoding._recursive_compute_beta2(x, betas)
-#quantum_dist = nearest_centroid.quantum_distance(x, y)
-#classical_dist = nearest_centroid.classical_distance(x, y)  
+nearest_centroid = NearestCentroid(x, y)
+quantum_dist = nearest_centroid.quantum_distance(x, y)
+classical_dist = nearest_centroid.classical_distance(x, y)  
 
-#print(nearest_centroid.circ)
-#print("Quantum dist: " + str(quantum_dist))
-#print("Classical dist: " + str(classical_dist))
+
+print(nearest_centroid.circ)
+print("Quantum dist: " + str(quantum_dist))
+print("Classical dist: " + str(classical_dist))
