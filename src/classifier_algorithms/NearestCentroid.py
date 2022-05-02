@@ -10,7 +10,7 @@ class NearestCentroid:
 
     def __init__(self, x: np.array, y: np.array):
         circ_x = DC_Amplitude_Encoding(x).circ
-        circ_y = DC_Amplitude_Encoding(y).circ.reverse_ops()
+        circ_y = DC_Amplitude_Encoding(y, inverse=True).circ.inverse()
 
         qregisters = QuantumRegister(len(x), "q")
         cregisters = ClassicalRegister(1, "c")
@@ -45,9 +45,10 @@ class NearestCentroid:
 
     def _quantum_inner(self, x, y, repetitions=1000):
         simulator = Aer.get_backend('aer_simulator')
-        self.circ = transpile(self.circ, simulator)
         result = simulator.run(self.circ, shots= repetitions).result()
         counts = result.get_counts(self.circ)
+
+        print(counts)
         if '1' in counts.keys():
             z = counts['1'] / repetitions
         else:

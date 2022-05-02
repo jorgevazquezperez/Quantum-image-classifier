@@ -9,12 +9,13 @@ from gates.RBS import RBS
 class DC_Amplitude_Encoding(Encoding):
     tree = None
     
-    def __init__(self, input_vector):
+    def __init__(self, input_vector, inverse = False):
             self.num_qubits = int(len(input_vector))
             self.quantum_data = QuantumRegister(self.num_qubits)
             self.circ = QuantumCircuit(self.quantum_data)
             newx = np.copy(input_vector)
             betas = []
+            #betas = self.get_angles(newx)
             self._beta_calc(newx, betas)
             self._dc_generate_circuit(betas)
             super().__init__("Divide and Conquer Amplitude Encoding")
