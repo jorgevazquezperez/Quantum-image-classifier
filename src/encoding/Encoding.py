@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import numpy as np
 
 class Encoding:
@@ -13,43 +14,74 @@ class Encoding:
     
     def print_circuit(self):
         print(self.qcircuit)
-
-    def _recursive_compute_beta1(self, input_vector, betas):
-        if len(input_vector) > 1:
-            new_x = []
-            beta = []
-            for k in range(0, len(input_vector), 2):
-                norm = np.sqrt(input_vector[k] ** 2 + input_vector[k + 1] ** 2)
-                new_x.append(norm)
-                if norm == 0:
-                    beta.append(0)
-                else:
-                    if input_vector[k] < 0:
-                        beta.append(2 * np.pi - 2 * np.arcsin(input_vector[k + 1] / norm)) ## testing
-                    else:
-                        beta.append(2 * np.arcsin(input_vector[k + 1] / norm))
-            self._recursive_compute_beta1(new_x, betas)
-            betas.append(beta)
     
-    def _recursive_compute_beta2(self, input_vector, betas):
-        if len(input_vector) > 1:
-            new_x = []
-            beta = []
-            for k in range(0, len(input_vector), 2):
-                norm = np.sqrt(input_vector[k] ** 2 + input_vector[k + 1] ** 2)
-                new_x.append(norm)
-                if norm == 0:
-                    beta.append(0)
-                else:
-                    if input_vector[k] < 0:
-                        beta.append(2 * np.pi - np.arccos(input_vector[k + 1] / norm)) ## testing
-                    else:
-                        beta.append(np.arccos(input_vector[k + 1] / norm))
-            self._recursive_compute_beta2(new_x, betas)
-            betas.append(beta)
+    def _beta_calc(self, input_vector, betas):
+        d_half = len(input_vector)//2
+        rigth_half = input_vector[d_half:]
 
-    def _index(self, k, circuit, control_qubits, numberof_controls):
-        binary_index = '{:0{}b}'.format(k, numberof_controls)
-        for j, qbit in enumerate(control_qubits):
-            if binary_index[j] == '1':
-                circuit.x(qbit)
+        r = []
+        for i in range(len(rigth_half)):
+            r_elem = np.sqrt(input_vector[2*i]**2 + input_vector[2*i+1]**2)
+            r.append(r_elem)
+
+        for i in range(d_half-2, -1, -1):
+            r_elem = np.sqrt(r[i+1]**2 + r[i]**2)
+            r.insert(0, r_elem)
+    
+        for i in range(len(input_vector)-1):
+            if i < d_half - 1:
+                if r[i] != 0:
+                    betas.append(np.arccos(r[2*i+1] / r[i]))
+                else:
+                    betas.append(1)
+            else:
+                if input_vector[i - d_half + 3] >= 0:
+                    if r[i] != 0 :
+                        print(input_vector[(i - d_half + 1)*2] / r[i])
+                        betas.append(np.arccos(input_vector[(i - d_half + 1)*2] / r[i]))
+                    else:
+                        betas.append(1)
+                else:
+                    if r[i] != 0:
+                        betas.append(2*np.pi - np.arccos(input_vector[(i - d_half + 1)*2] / r[i]))
+                    else:
+                        betas.append(1)
+
+    def get_angles(self, x):
+        # convert to array
+        x = np.array(x)
+        shape = x.shape
+        if len(shape) == 1:
+            x = np.expand_dims(x, axis=0)
+
+        if x.shape[1] == 1:
+            x = x.T
+
+        # get recursively the angles
+        def angles(y, wire):
+            d = y.shape[-1]
+            if d == 2:
+                thetas = np.arccos(y[:, 0] / np.linalg.norm(y, 2, 1))
+                signs = (y[:, 1] > 0.).astype(int)
+                thetas = signs * thetas + (1. - signs) * (2. * np.pi - thetas)
+                thetas = np.expand_dims(thetas, 1)
+                wires = [(wire, wire + 1)]
+                return thetas, wires
+            else:
+                thetas = np.arccos(
+                    np.linalg.norm(y[:, :d // 2], 2, 1, True) /
+                    np.linalg.norm(y, 2, 1, True))
+                thetas_l, wires_l = angles(y[:, :d // 2], wire)
+                thetas_r, wires_r = angles(y[:, d // 2:], wire + d // 2)
+                thetas = np.concatenate([thetas, thetas_l, thetas_r], axis=1)
+                wires = [(wire, wire + d // 2)] + wires_l + wires_r
+            return thetas, wires
+
+        # result
+        thetas, wires = angles(x, 0)
+
+        # remove nan and one dims
+        thetas = np.nan_to_num(thetas, nan=0)
+        thetas = thetas.squeeze()
+
+        return thetas
