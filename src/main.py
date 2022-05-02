@@ -1,17 +1,13 @@
 import numpy as np
 from classifier_algorithms.NearestCentroid import NearestCentroid
 from encoding.Encoding import Encoding
+from data_treatment.data_generator import generate_synthetic_data
 
-x = np.array(np.random.randint(5, size=8))
-y = np.array(np.random.randint(5, size=8))
+n_dim = 8
+n_clusters = 4
+X, y = generate_synthetic_data(n_dim, n_clusters)
+nearest_centroid = NearestCentroid(X[:200], y[:200], n_dim)
+labels_predicted = nearest_centroid.predict(X[200:], y[200:])
 
-
-#x = np.array([3, 2, 3, 0, 1, 2, 2, 4])
-#y = np.array([3, 1, 2, 0, 1, 0, 0, 1])
-
-nearest_centroid = NearestCentroid(x, y)
-quantum_dist = nearest_centroid.quantum_distance(x, y)
-classical_dist = nearest_centroid.classical_distance(x, y)  
-
-print(nearest_centroid.circ)
-print(quantum_dist, classical_dist)
+print(y[200:])
+print(np.array(labels_predicted))

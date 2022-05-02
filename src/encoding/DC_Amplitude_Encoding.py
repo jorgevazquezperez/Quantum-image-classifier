@@ -2,7 +2,6 @@ import numpy as np
 from qiskit import QuantumRegister, QuantumCircuit
 
 from encoding.Encoding import Encoding
-from encoding.bin_tree import bin_tree
 from gates.iRBS import iRBS
 from gates.RBS import RBS
 
