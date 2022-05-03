@@ -41,7 +41,7 @@ class NearestCentroid:
             circ_centroid = QuantumCircuit(qregisters, cregisters)
 
             circ_centroid.x(qregisters[0])
-            circ_centroid.compose(UnaryLoader(centroid).circ, inplace=True)
+            circ_centroid.compose(UnaryLoader(centroid).circuit, inplace=True)
             self.circ_centroids[label] = circ_centroid
 
     def _calc_centroids(self, X: np.ndarray, y: np.ndarray) -> dict:
@@ -112,7 +112,7 @@ class NearestCentroid:
         Returns:
             float: inner product between a centroid and y
         """ 
-        circ_y = UnaryLoader(y, inverse=True).circ.inverse()
+        circ_y = UnaryLoader(y, inverse=True).circuit.inverse()
         circuit = circ_centroid.compose(circ_y)
         circuit.measure([0], [0])
         simulator = Aer.get_backend('aer_simulator')

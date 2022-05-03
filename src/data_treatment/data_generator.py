@@ -2,6 +2,9 @@ from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
 
 def generate_synthetic_data(n_dim: int, n_clusters: int):
+    """
+    Function to generate synthetic data to test the algorithms.
+    """
     n_samples = 250
     random_state = 42
 

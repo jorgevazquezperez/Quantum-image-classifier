@@ -7,10 +7,11 @@ from qiskit.circuit.library import CRYGate, CRZGate, CXGate
 from qiskit.circuit.parameterexpression import ParameterValueType
 from typing import Optional
 
-
 class RBS:
-
-    def __init__(self, theta):
+    """
+    Implementation of a RBS gate as an operator.
+    """
+    def __init__(self, theta: float) -> None:
         """Create new RBS operation."""
         a = np.cos(theta)
         b = np.sin(theta)
