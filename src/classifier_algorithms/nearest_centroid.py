@@ -61,7 +61,7 @@ class NearestCentroid:
             centroids[label] += x / len(X)
         return centroids
 
-    def predict(self, X: np.ndarray, y: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Predicts the label of a batch of observations
 
