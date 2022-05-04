@@ -9,7 +9,10 @@ dirname = os.path.dirname(__file__)
 train = os.path.join(dirname, '../../data/mnist_train.csv')
 test = os.path.join(dirname, '../../data/mnist_test.csv')
 
-def get_MNIST():
+def get_MNIST() -> None:
+    """
+    Function to get the MNIST dataset and perform a PCA to it
+    """
     train_csv = pd.read_csv(train)
     train_y = train_csv['label']
     train_X = train_csv.drop("label",axis=1)
@@ -23,7 +26,14 @@ def get_MNIST():
 
     return train_X, train_y, test_X, test_y
 
-def do_pca(n_components, data):
+def do_pca(n_components: int, data: np.ndarray) -> None:
+    """
+    Function to perform PCA to a given data.
+
+    Args:
+        n_components: number of components to which we reduce the data
+        data: the info we want to apply PCA to
+    """
     X = StandardScaler().fit_transform(data)
     pca = PCA(n_components)
     X_pca = pca.fit_transform(X)
