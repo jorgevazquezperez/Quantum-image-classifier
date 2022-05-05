@@ -1,7 +1,7 @@
 # Quantum image classifier
 ## Data use
 You can generate synthetic data by calling the function `generate_synthetic_data(n_dim: int, n_clusters: int, m_samples: int)` implemented in *data_generator.py*. You have to be aware that, in order to Nearest Centroid to work, `n_dim` has to be power of 2.
-This function returns a set of 250 vectors X with a set of labels y associated with the vector in the same possition on X. Example:
+This function returns a set of m_samples vectors X with a set of labels y associated with the vector in the same possition on X. Example:
 
 ```{r}
 X, y = generate_synthetic_data(8, 4, 250)
