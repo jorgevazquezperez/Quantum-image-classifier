@@ -21,6 +21,7 @@ def get_MNIST(n_components) -> tuple:
     test_y = test_csv['label']
     test_X = test_csv.drop("label",axis=1)
 
+    # We apply PCA to each the training and the test dataset
     train_X = do_pca(n_components, train_X)
     test_X = do_pca(n_components, test_X)
 
@@ -40,4 +41,4 @@ def do_pca(n_components: int, data: np.ndarray) -> np.ndarray:
     return X_pca
 
 if(__name__ == "__main__"):
-    print(get_MNIST())
+    print(get_MNIST(8))

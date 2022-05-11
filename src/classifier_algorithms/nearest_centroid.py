@@ -36,10 +36,11 @@ class NearestCentroid:
 
         self.circ_centroids = {}
         for label, centroid in self.centroids.items():
+            
+            # After we calculate each centroid, we create its respective circuit
             qregisters = QuantumRegister(n_dim, "q")
             cregisters = ClassicalRegister(1, "c")
             circ_centroid = QuantumCircuit(qregisters, cregisters)
-
             circ_centroid.x(qregisters[0])
             circ_centroid.compose(UnaryLoader(centroid).circuit, inplace=True)
             self.circ_centroids[label] = circ_centroid
@@ -74,6 +75,7 @@ class NearestCentroid:
         labels = []
         for x in X:
             dist = {}
+            # For every x in the test set X we calculate the distance to each centroid and select the minimum 
             for label, centroid in self.centroids.items():
                 dist[label] = self.quantum_distance(
                     self.circ_centroids[label], centroid, x)
@@ -112,6 +114,7 @@ class NearestCentroid:
         Returns:
             float: inner product between a centroid and y
         """ 
+        # We execute the circuit a defined times of repetitions
         circ_y = UnaryLoader(y, inverse=True).circuit.inverse()
         circuit = circ_centroid.compose(circ_y)
         circuit.measure([0], [0])

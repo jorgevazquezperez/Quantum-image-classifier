@@ -1,11 +1,5 @@
-from msilib.schema import Property
 import numpy as np
-
-from qiskit import QuantumRegister, QuantumCircuit
 import qiskit.quantum_info as qi
-from qiskit.circuit.library import CRYGate, CRZGate, CXGate
-from qiskit.circuit.parameterexpression import ParameterValueType
-from typing import Optional
 
 class RBS:
     """
@@ -15,6 +9,8 @@ class RBS:
         """Create new RBS operation."""
         a = np.cos(theta)
         b = np.sin(theta)
+
+        # Matrix definition of the gate
         self.rbs = qi.Operator([ [1, 0,  0, 0],
                                  [0, a,  b, 0],
                                  [0, -b, a, 0],
