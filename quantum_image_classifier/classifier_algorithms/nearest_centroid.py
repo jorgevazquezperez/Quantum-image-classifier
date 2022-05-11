@@ -2,7 +2,7 @@ import numpy as np
 from qiskit import Aer
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 
-from encoding.unary_loader import UnaryLoader
+from ..encoding import UnaryLoader
 
 
 class NearestCentroid:

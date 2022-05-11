@@ -1,8 +1,8 @@
 import numpy as np
 from qiskit import QuantumRegister, QuantumCircuit
 
-from encoding.encoding import Encoding
-from gates.RBS import RBS
+from .encoding import Encoding
+from ..gates import RBS
 
 
 class UnaryLoader(Encoding):
