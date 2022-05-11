@@ -15,6 +15,7 @@ def generate_synthetic_data(n_dim: int, n_clusters: int, n_samples: int) -> tupl
                     centers=n_clusters, 
                     random_state=random_state)
 
+    # We create a breakpoint in the dataset to divide it and obtain a training set and a test set
     breakpoint = n_samples * 3 // 4
 
     # (training, test)
