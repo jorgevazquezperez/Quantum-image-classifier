@@ -5,7 +5,7 @@ import os
 import re
 
 REQUIREMENTS_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "env",  "requirements.txt")
-with open('requirements.txt') as f:
+with open(REQUIREMENTS_PATH) as f:
     REQUIREMENTS = f.read().splitlines()
 
 if not hasattr(setuptools, 'find_namespace_packages') or not inspect.ismethod(setuptools.find_namespace_packages):
