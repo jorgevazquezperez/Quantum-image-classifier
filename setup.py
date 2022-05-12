@@ -48,7 +48,7 @@ setuptools.setup(
         "Topic :: Scientific/Engineering"
     ],
     keywords='qiskit quantum machine learning ml centroids',
-    packages=setuptools.find_packages(include=['quantum_image_classifier']),
+    packages=setuptools.find_packages(include=['quantum_image_classifier', 'quantum_image_classifier.*']),
     install_requires=REQUIREMENTS,
     include_package_data=True,
     python_requires=">=3.7",
