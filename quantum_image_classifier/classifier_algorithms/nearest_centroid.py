@@ -23,13 +23,31 @@ class NearestCentroid:
 
     """
 
-    def __init__(self, X: np.ndarray, y: np.ndarray, n_dim: int) -> None:
+    def __init__(self, X: np.ndarray = None, y: np.ndarray = None, n_dim: int = None) -> None:
         """
 
+        Args:
+            X: Training data values of dimension k or None
+            y: Training data labels of dimension k or None
+            n_dim: Dimension of the training dataset, i.e., k or None
+        Raise: 
+            AttributeError: In case some attributes have values and others are empty
+        """
+        if (X is not None) and (y is not None) and (n_dim is not None):
+            self.set_centroids(X, y, n_dim)
+        elif (X is None) and (y is None) and (n_dim is None):
+            pass
+        else:
+            raise AttributeError("Either all attributes are empty or have the accurate values.")
+    
+    def set_centroids(self, X: np.ndarray, y: np.ndarray, n_dim: int) -> None:
+        """
+        
         Args:
             X: Training data values of dimension k
             y: Training data labels of dimension k
             n_dim: Dimension of the training dataset, i.e., k
+
         """
         self.n_dim = n_dim
         self.centroids = self._calc_centroids(X, y)
@@ -44,7 +62,7 @@ class NearestCentroid:
             circ_centroid.x(qregisters[0])
             circ_centroid.compose(UnaryLoader(centroid).circuit, inplace=True)
             self.circ_centroids[label] = circ_centroid
-
+    
     def _calc_centroids(self, X: np.ndarray, y: np.ndarray) -> dict:
         """
         Calculate the centroids of the clusters classically
