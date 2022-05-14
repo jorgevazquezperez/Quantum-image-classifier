@@ -5,7 +5,7 @@ import os
 import re
 
 REQUIREMENTS_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "env",  "requirements.txt")
-with open('requirements.txt') as f:
+with open(REQUIREMENTS_PATH) as f:
     REQUIREMENTS = f.read().splitlines()
 
 if not hasattr(setuptools, 'find_namespace_packages') or not inspect.ismethod(setuptools.find_namespace_packages):
@@ -27,6 +27,7 @@ with open(README_PATH) as readme_file:
         flags=re.S | re.M,
     )
 
+
 setuptools.setup(
     name='quantum-image-classifier',
     version=VERSION,
@@ -35,7 +36,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url='https://github.com/jorgevazquezperez/Quantum-image-classifier',
     author='Jorge Vázquez Pérez',
-    author_email='jorge.vazper@gamil.com',
+    author_email='jorge.vazper@gmail.com',
     #license='Apache-2.0',
     classifiers=[
         "Environment :: Console",
@@ -48,7 +49,12 @@ setuptools.setup(
         "Topic :: Scientific/Engineering"
     ],
     keywords='qiskit quantum machine learning ml centroids',
-    packages=setuptools.find_packages(include=['quantum_image_classifier']),
+    packages=[
+        "quantum_image_classifier", 
+        "quantum_image_classifier.classifier_algorithms", 
+        "quantum_image_classifier.encoding", 
+        "quantum_image_classifier.gates",
+        "quantum_image_classifier.data_treatment" ],
     install_requires=REQUIREMENTS,
     include_package_data=True,
     python_requires=">=3.7",
