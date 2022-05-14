@@ -36,7 +36,7 @@ class NearestCentroid:
         if (X is not None) and (y is not None) and (n_dim is not None):
             self.set_centroids(X, y, n_dim)
         elif (X is None) and (y is None) and (n_dim is None):
-            pass
+            self.circ_centroids = None
         else:
             raise AttributeError("Either all attributes are empty or have the accurate values.")
     
@@ -90,17 +90,20 @@ class NearestCentroid:
         Returns:
             nd.ndarray: with the label of each observation in the batch
         """
-        labels = []
-        for x in X:
-            dist = {}
-            # For every x in the test set X we calculate the distance to each centroid and select the minimum 
-            for label, centroid in self.centroids.items():
-                dist[label] = self.quantum_distance(
-                    self.circ_centroids[label], centroid, x)
-            labels.append(min(dist, key=dist.get))
-        return np.array(labels)
+        if self.circ_centroids is not None:
+            labels = []
+            for x in X:
+                dist = {}
+                # For every x in the test set X we calculate the distance to each centroid and select the minimum 
+                for label, centroid in self.centroids.items():
+                    dist[label] = self._quantum_distance(
+                        self.circ_centroids[label], centroid, x)
+                labels.append(min(dist, key=dist.get))
+            return np.array(labels)
+        else:
+            raise AttributeError("Training set cannot be empty to predict.")
 
-    def quantum_distance(self, circ_centroid: QuantumCircuit, centroid: np.ndarray, y: np.ndarray, repetitions: int = 1000) -> float:
+    def _quantum_distance(self, circ_centroid: QuantumCircuit, centroid: np.ndarray, y: np.ndarray, repetitions: int = 1000) -> float:
         """
         Calculates the distance between x (centroid) and y using circuit to calculate the inner product. The distance is the
         euclidean distance, represented by the formula:
