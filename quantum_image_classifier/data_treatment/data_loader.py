@@ -36,8 +36,7 @@ def get_MNIST(n_components, reduction: str = "PCA") -> tuple:
         train_X = do_pca(n_components, train_X)
         test_X = do_pca(n_components, test_X)
     elif reduction == "AE":
-        train_X = do_AE(n_components, train_X, test_X)
-        #test_X = do_AE(n_components, test_X)
+        train_X, test_X = do_AE(n_components, train_X, test_X)
     else:
         raise OptionError()
 
@@ -57,7 +56,7 @@ def do_pca(n_components: int, data: np.ndarray) -> np.ndarray:
     X_pca = np.array(pca.fit_transform(X))
     return X_pca
 
-def do_AE(encoding_dim: int, x_train: np.ndarray, x_test: np.ndarray) -> np.ndarray:
+def do_AE(encoding_dim: int, train_X: np.ndarray, test_X: np.ndarray) -> np.ndarray:
     input_img = Input(shape=(784,))
     # encoded representation of input
     encoded = Dense(encoding_dim, activation='relu')(input_img)
@@ -77,24 +76,28 @@ def do_AE(encoding_dim: int, x_train: np.ndarray, x_test: np.ndarray) -> np.ndar
 
     autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
 
-    x_train = x_train.astype('float32') / 255.
-    x_test = x_test.astype('float32') / 255.
+    train_X = train_X.astype('float32') / 255.
+    test_X = test_X.astype('float32') / 255.
 
-    autoencoder.fit(x_train, x_train,
-                epochs=15,
+    autoencoder.fit(train_X, train_X,
+                epochs=20,
                 batch_size=256,
-                validation_data=(x_test, x_test))
+                validation_data=(test_X, test_X))
+
     
-    encoded_img = encoder.predict(x_test)
+    return encoder.predict(train_X), encoder.predict(test_X)
+
+    """
     decoded_img = decoder.predict(encoded_img)
     plt.figure(figsize=(20, 4))
     for i in range(5):
         # Display original
         ax = plt.subplot(2, 5, i + 1)
-        plt.imshow(x_test[i].reshape(28, 28))
+        plt.imshow(test_X[i].reshape(28, 28))
         plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
+
         # Display reconstruction
         ax = plt.subplot(2, 5, i + 1 + 5)
         plt.imshow(decoded_img[i].reshape(28, 28))
@@ -102,6 +105,7 @@ def do_AE(encoding_dim: int, x_train: np.ndarray, x_test: np.ndarray) -> np.ndar
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
     plt.show()
+    """
 
 def do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> np.ndarray:
 
@@ -111,6 +115,7 @@ def do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> np.
     model.add(MaxPooling2D(2, padding= 'same'))
     model.add(Conv2D(15, 3, activation= 'relu', padding='same'))
     model.add(MaxPooling2D(2, padding= 'same'))
+
     #decoder network
     model.add(Conv2D(15, 3, activation= 'relu', padding='same'))
     model.add(UpSampling2D(2))
