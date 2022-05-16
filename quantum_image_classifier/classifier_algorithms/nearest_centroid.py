@@ -23,13 +23,31 @@ class NearestCentroid:
 
     """
 
-    def __init__(self, X: np.ndarray, y: np.ndarray, n_dim: int) -> None:
+    def __init__(self, X: np.ndarray = None, y: np.ndarray = None, n_dim: int = None) -> None:
         """
 
+        Args:
+            X: Training data values of dimension k or None
+            y: Training data labels of dimension k or None
+            n_dim: Dimension of the training dataset, i.e., k or None
+        Raise: 
+            AttributeError: In case some attributes have values and others are empty
+        """
+        if (X is not None) and (y is not None) and (n_dim is not None):
+            self.set_centroids(X, y, n_dim)
+        elif (X is None) and (y is None) and (n_dim is None):
+            self.circ_centroids = None
+        else:
+            raise AttributeError("Either all attributes are empty or have the accurate values.")
+    
+    def set_centroids(self, X: np.ndarray, y: np.ndarray, n_dim: int) -> None:
+        """
+        
         Args:
             X: Training data values of dimension k
             y: Training data labels of dimension k
             n_dim: Dimension of the training dataset, i.e., k
+
         """
         self.n_dim = n_dim
         self.centroids = self._calc_centroids(X, y)
@@ -44,7 +62,7 @@ class NearestCentroid:
             circ_centroid.x(qregisters[0])
             circ_centroid.compose(UnaryLoader(centroid).circuit, inplace=True)
             self.circ_centroids[label] = circ_centroid
-
+    
     def _calc_centroids(self, X: np.ndarray, y: np.ndarray) -> dict:
         """
         Calculate the centroids of the clusters classically
@@ -72,17 +90,20 @@ class NearestCentroid:
         Returns:
             nd.ndarray: with the label of each observation in the batch
         """
-        labels = []
-        for x in X:
-            dist = {}
-            # For every x in the test set X we calculate the distance to each centroid and select the minimum 
-            for label, centroid in self.centroids.items():
-                dist[label] = self.quantum_distance(
-                    self.circ_centroids[label], centroid, x)
-            labels.append(min(dist, key=dist.get))
-        return np.array(labels)
+        if self.circ_centroids is not None:
+            labels = []
+            for x in X:
+                dist = {}
+                # For every x in the test set X we calculate the distance to each centroid and select the minimum 
+                for label, centroid in self.centroids.items():
+                    dist[label] = self._quantum_distance(
+                        self.circ_centroids[label], centroid, x)
+                labels.append(min(dist, key=dist.get))
+            return np.array(labels)
+        else:
+            raise AttributeError("Training set cannot be empty to predict.")
 
-    def quantum_distance(self, circ_centroid: QuantumCircuit, centroid: np.ndarray, y: np.ndarray, repetitions: int = 1000) -> float:
+    def _quantum_distance(self, circ_centroid: QuantumCircuit, centroid: np.ndarray, y: np.ndarray, repetitions: int = 1000) -> float:
         """
         Calculates the distance between x (centroid) and y using circuit to calculate the inner product. The distance is the
         euclidean distance, represented by the formula:
