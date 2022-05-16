@@ -150,7 +150,7 @@ def do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> np.
     new_model.compile(optimizer='adam', loss='categorical_crossentropy')
 
     #get output of the first dens layer
-    output = new_model.predict(samples)
+    # output = new_model.predict(samples)
 
     plt.figure(figsize=(20, 4))
     for i in range(5):
