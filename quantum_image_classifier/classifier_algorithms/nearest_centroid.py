@@ -34,74 +34,42 @@ class NearestCentroid:
             AttributeError: In case some attributes have values and others are empty
         """
         if (X is not None) and (y is not None) and (n_dim is not None):
-            self.set_centroids(X, y, n_dim)
+            self.train_X = X
+            self.train_y = y
+            self.n_dim = n_dim
         elif (X is None) and (y is None) and (n_dim is None):
-            self.circ_centroids = None
+            pass
         else:
             raise AttributeError("Either all attributes are empty or have the accurate values.")
     
-    def set_centroids(self, X: np.ndarray, y: np.ndarray, n_dim: int) -> None:
-        """
-        
-        Args:
-            X: Training data values of dimension k
-            y: Training data labels of dimension k
-            n_dim: Dimension of the training dataset, i.e., k
-
-        """
-        self.n_dim = n_dim
-        self.centroids = self._calc_centroids(X, y)
+    def _calc_circ_centroids(self) -> None:
+        """ Calculate centroids' circuits """
+        self.centroids = self._calc_centroids()
 
         self.circ_centroids = {}
         for label, centroid in self.centroids.items():
             
             # After we calculate each centroid, we create its respective circuit
-            qregisters = QuantumRegister(n_dim, "q")
+            qregisters = QuantumRegister(self.n_dim, "q")
             cregisters = ClassicalRegister(1, "c")
             circ_centroid = QuantumCircuit(qregisters, cregisters)
             circ_centroid.x(qregisters[0])
             circ_centroid.compose(UnaryLoader(centroid).circuit, inplace=True)
             self.circ_centroids[label] = circ_centroid
     
-    def _calc_centroids(self, X: np.ndarray, y: np.ndarray) -> dict:
-        """
+    def _calc_centroids(self) -> dict:
+        """ 
         Calculate the centroids of the clusters classically
 
-        Args:
-            X: Training data values of dimension k
-            y: Training data labels of dimension k
         Returns:
             dict: with the centroid point associated to each label
         """
-        centroids = dict.fromkeys(y)
+        centroids = dict.fromkeys(self.train_y)
         for label in centroids:
             centroids[label] = np.repeat(float(0), self.n_dim)
-        for x, label in zip(X, y):
-            centroids[label] += x / len(X)
+        for x, label in zip(self.train_X, self.train_y):
+            centroids[label] += x / len(self.train_X)
         return centroids
-
-    def predict(self, X: np.ndarray) -> np.ndarray:
-        """
-        Predicts the label of a batch of observations
-
-        Args:
-            X: Test data values of dimension l
-            y: Test data labels of dimension l
-        Returns:
-            nd.ndarray: with the label of each observation in the batch
-        """
-        if self.circ_centroids is not None:
-            labels = []
-            for x in X:
-                dist = {}
-                # For every x in the test set X we calculate the distance to each centroid and select the minimum 
-                for label, centroid in self.centroids.items():
-                    dist[label] = self._quantum_distance(
-                        self.circ_centroids[label], centroid, x)
-                labels.append(min(dist, key=dist.get))
-            return np.array(labels)
-        else:
-            raise AttributeError("Training set cannot be empty to predict.")
 
     def _quantum_distance(self, circ_centroid: QuantumCircuit, centroid: np.ndarray, y: np.ndarray, repetitions: int = 1000) -> float:
         """
@@ -148,3 +116,40 @@ class NearestCentroid:
         else:
             z = 0
         return np.sqrt(z)
+
+    def fit(self, X: np.ndarray = None, y: np.ndarray = None, n_dim: int = None) -> None:
+        if (X is not None) and (y is not None):
+            self.train_X = X
+            self.train_y = y
+            self.n_dim = n_dim
+            self._calc_circ_centroids()
+        elif (X is None) and (y is None):
+            if (self.train_X is not None) and (self.train_y is not None):
+                self._calc_circ_centroids()
+            else:
+                raise AttributeError("You need to initialize the dataset.")
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        """
+        Predicts the label of a batch of observations
+
+        Args:
+            X: Test data values of dimension l
+            y: Test data labels of dimension l
+        Returns:
+            nd.ndarray: with the label of each observation in the batch
+        """
+        if self.circ_centroids is not None:
+            labels = []
+            for x in X:
+                dist = {}
+                # For every x in the test set X we calculate the distance to each centroid and select the minimum 
+                for label, centroid in self.centroids.items():
+                    dist[label] = self._quantum_distance(
+                        self.circ_centroids[label], centroid, x)
+                labels.append(min(dist, key=dist.get))
+            return np.array(labels)
+        else:
+            raise AttributeError("Training set cannot be empty to predict.")
+
+    
