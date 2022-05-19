@@ -1,4 +1,4 @@
-numpy>=1.22
+numpy>=1.21.6
 qiskit-terra>=0.20.0
 setuptools>=40.1.0
 sklearn
