@@ -5,7 +5,7 @@ import os
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
-from keras.layers import Dense,Conv2D,MaxPooling2D,UpSampling2D
+from keras.layers import Dense,Conv2D,MaxPooling2D,UpSampling2D,Flatten, Reshape
 from keras import Sequential, Model, Input
 import numpy as np
 import matplotlib.pyplot as plt
@@ -37,6 +37,8 @@ def get_MNIST(n_components, reduction: str = "PCA") -> tuple:
         test_X = do_pca(n_components, test_X)
     elif reduction == "AE":
         train_X, test_X = do_AE(n_components, train_X, test_X)
+    elif reduction == "AE_CNN":
+        train_X, test_X = do_AE_CNN(n_components, train_X, test_X)
     else:
         raise OptionError()
 
@@ -115,8 +117,11 @@ def do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> np.
     model.add(MaxPooling2D(2, padding= 'same'))
     model.add(Conv2D(15, 3, activation= 'relu', padding='same'))
     model.add(MaxPooling2D(2, padding= 'same'))
-
+    model.add(Flatten())
+    model.add(Dense(units=n_components, activation="relu"))
     #decoder network
+    model.add(Dense(units=735, activation="relu"))
+    model.add(Reshape((7, 7, 15)))
     model.add(Conv2D(15, 3, activation= 'relu', padding='same'))
     model.add(UpSampling2D(2))
     model.add(Conv2D(30, 3, activation= 'relu', padding='same'))
@@ -129,29 +134,29 @@ def do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> np.
     test_X = test_X.astype('float32') / 255.
     train_X = np.reshape(train_X, (len(train_X), 28, 28, 1))
     test_X = np.reshape(test_X, (len(test_X), 28, 28, 1))
-    model.fit(train_X, train_X,
-                    epochs=15,
-                    batch_size=128,
-                    validation_data=(test_X, test_X))
+    model.fit(train_X, train_X, epochs=8, batch_size=128, validation_data=(test_X, test_X))
 
     pred = model.predict(test_X)
 
+    
     #create new model
     new_model= Sequential()
     new_model.add(Conv2D(30, 3, activation= 'relu', padding='same', input_shape = (28,28,1)))
     new_model.add(MaxPooling2D(2, padding= 'same'))
     new_model.add(Conv2D(15, 3, activation= 'relu', padding='same'))
     new_model.add(MaxPooling2D(2, padding= 'same'))
+    new_model.add(Flatten())
+    new_model.add(Dense(units=n_components, activation="relu"))
 
     #set weights of the first layer
-    new_model.set_weights(model.layers[0].get_weights())
+    enc_len = len(model.layers) // 2
+    for i, layer in enumerate(model.layers[:enc_len]):
+        print(i)
+        new_model.layers[i].set_weights(layer.get_weights())
 
     #compile it after setting the weights
     new_model.compile(optimizer='adam', loss='categorical_crossentropy')
-
-    #get output of the first dens layer
-    # output = new_model.predict(samples)
-
+    
     plt.figure(figsize=(20, 4))
     for i in range(5):
         # Display original
@@ -168,6 +173,8 @@ def do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> np.
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
     plt.show()
+
+    return new_model.predict(train_X), new_model.predict(test_X)
 
 
 
