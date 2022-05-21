@@ -30,7 +30,6 @@ def get_MNIST(n_components, reduction: str = "PCA") -> tuple:
     """
     mnist = tk.datasets.mnist
     (train_X, train_y), (test_X, test_y) = mnist.load_data()
-    print(type(train_X))
 
     if reduction == "PCA":
         # We apply PCA to each the training and the test dataset
