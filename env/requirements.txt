@@ -5,3 +5,5 @@ setuptools>=40.1.0
 sklearn
 matplotlib
 pandas
+keras
+tensorflow
