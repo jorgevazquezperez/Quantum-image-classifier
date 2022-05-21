@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 
 from keras.layers import Dense,Conv2D,MaxPooling2D,UpSampling2D,Flatten, Reshape
 from keras import Sequential, Model, Input
+import tensorflow.keras as tk
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -17,70 +18,83 @@ test = os.path.join(dirname, '../../data/mnist_test.csv')
 
 def get_MNIST(n_components, reduction: str = "PCA") -> tuple:
     """
-    Function to get the MNIST dataset and perform a PCA to it
+    Function to get the MNIST dataset and perform a dimension reduction to it.
+    To perform the dimension reduction we can use:
+        - PCA
+        - Simple autoencoder
+        - Autoencoder based on CNN.
+
+    Args:
+        n_components: number of components to which we reduce the data
+        reduction: type of reduction we will use
     """
-    train_csv = pd.read_csv(train)
-    test_csv = pd.read_csv(test)
-    labels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-    train_csv = train_csv[train_csv.label.isin(labels)]
-    train_y = np.array(train_csv['label'])
-    train_X = np.array(train_csv.drop("label", axis=1))
-
-    test_csv = test_csv[test_csv.label.isin(labels)]
-    test_y = np.array(test_csv['label'])
-    test_X = np.array(test_csv.drop("label", axis=1))
+    mnist = tk.datasets.mnist
+    (train_X, train_y), (test_X, test_y) = mnist.load_data()
+    print(type(train_X))
 
     if reduction == "PCA":
         # We apply PCA to each the training and the test dataset
-        train_X = do_pca(n_components, train_X)
-        test_X = do_pca(n_components, test_X)
+        train_X, test_X = _do_PCA(n_components, train_X, test_X)
     elif reduction == "AE":
-        train_X, test_X = do_AE(n_components, train_X, test_X)
+        train_X, test_X = _do_AE(n_components, train_X, test_X)
     elif reduction == "AE_CNN":
-        train_X, test_X = do_AE_CNN(n_components, train_X, test_X)
+        train_X, test_X = _do_AE_CNN(n_components, train_X, test_X)
     else:
         raise OptionError()
 
     return train_X, train_y, test_X, test_y
 
 
-def do_pca(n_components: int, data: np.ndarray) -> np.ndarray:
+def _do_PCA(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple:
     """
     Function to perform PCA to a given data.
 
     Args:
         n_components: number of components to which we reduce the data
         data: the info we want to apply PCA to
+    Returns:
+        tuple: with the train and test arrays preprocessed
     """
-    X = StandardScaler().fit_transform(data)
-    pca = PCA(n_components)
-    X_pca = np.array(pca.fit_transform(X))
-    return X_pca
 
-def do_AE(encoding_dim: int, train_X: np.ndarray, test_X: np.ndarray) -> np.ndarray:
+    # We reshape and standarize the data
+    train_X = train_X.reshape((60000, 784))
+    test_X = test_X.reshape((10000, 784))
+    train_X = StandardScaler().fit_transform(train_X)
+    test_X = StandardScaler().fit_transform(test_X)
+    pca = PCA(n_components)
+
+    # We perform the PCA
+    train_X = pca.fit_transform(train_X)
+    test_X = pca.fit_transform(test_X)
+
+    return train_X, test_X
+
+def _do_AE(encoding_dim: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple:
+    """
+    Function to apply a simple autoencoder to a given data.
+
+    Args:
+        n_components: number of components to which we reduce the data
+        data: the info we want to apply the simple autoencoder to
+    Returns:
+        tuple: with the train and test arrays preprocessed
+    """
+    train_X = train_X.reshape((60000, 784))
+    test_X = test_X.reshape((10000, 784))
+
+    # Autoencoder model creation
     input_img = Input(shape=(784,))
-    # encoded representation of input
     encoded = Dense(encoding_dim, activation='relu')(input_img)
-    # decoded representation of code 
     decoded = Dense(784, activation='sigmoid')(encoded)
-    # Model which take input image and shows decoded images
     autoencoder = Model(input_img, decoded)
 
-    # This model shows encoded images
+    # Encoder part constructed
     encoder = Model(input_img, encoded)
-    # Creating a decoder model
-    encoded_input = Input(shape=(encoding_dim,))
-    # last layer of the autoencoder model
-    decoder_layer = autoencoder.layers[-1]
-    # decoder model
-    decoder = Model(encoded_input, decoder_layer(encoded_input))
 
+    # Compile of the model, scale the data and fit of the model
     autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
-
     train_X = train_X.astype('float32') / 255.
     test_X = test_X.astype('float32') / 255.
-
     autoencoder.fit(train_X, train_X,
                 epochs=20,
                 batch_size=256,
@@ -89,37 +103,28 @@ def do_AE(encoding_dim: int, train_X: np.ndarray, test_X: np.ndarray) -> np.ndar
     
     return encoder.predict(train_X), encoder.predict(test_X)
 
+def _do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple:
     """
-    decoded_img = decoder.predict(encoded_img)
-    plt.figure(figsize=(20, 4))
-    for i in range(5):
-        # Display original
-        ax = plt.subplot(2, 5, i + 1)
-        plt.imshow(test_X[i].reshape(28, 28))
-        plt.gray()
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
+    Function to apply a autoencoder based on a CNN to a given data.
 
-        # Display reconstruction
-        ax = plt.subplot(2, 5, i + 1 + 5)
-        plt.imshow(decoded_img[i].reshape(28, 28))
-        plt.gray()
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-    plt.show()
+    Args:
+        n_components: number of components to which we reduce the data
+        data: the info we want to apply the autoencoder based on a CNN to
+    Returns:
+        tuple: with the train and test arrays preprocessed
     """
-
-def do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> np.ndarray:
 
     model = Sequential()
-    # encoder network
+
+    # Encoder network
     model.add(Conv2D(30, 3, activation= 'relu', padding='same', input_shape = (28,28,1)))
     model.add(MaxPooling2D(2, padding= 'same'))
     model.add(Conv2D(15, 3, activation= 'relu', padding='same'))
     model.add(MaxPooling2D(2, padding= 'same'))
     model.add(Flatten())
     model.add(Dense(units=n_components, activation="relu"))
-    #decoder network
+
+    # Decoder network
     model.add(Dense(units=735, activation="relu"))
     model.add(Reshape((7, 7, 15)))
     model.add(Conv2D(15, 3, activation= 'relu', padding='same'))
@@ -129,17 +134,12 @@ def do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> np.
     model.add(Conv2D(1,3,activation='sigmoid', padding= 'same')) # output layer
     model.compile(optimizer= 'adam', loss = 'binary_crossentropy')
 
-
+    # Scalate the data and fit the model
     train_X = train_X.astype('float32') / 255.
     test_X = test_X.astype('float32') / 255.
-    train_X = np.reshape(train_X, (len(train_X), 28, 28, 1))
-    test_X = np.reshape(test_X, (len(test_X), 28, 28, 1))
     model.fit(train_X, train_X, epochs=8, batch_size=128, validation_data=(test_X, test_X))
-
-    pred = model.predict(test_X)
-
     
-    #create new model
+    # Create new model to get the data encoded
     new_model= Sequential()
     new_model.add(Conv2D(30, 3, activation= 'relu', padding='same', input_shape = (28,28,1)))
     new_model.add(MaxPooling2D(2, padding= 'same'))
@@ -148,32 +148,14 @@ def do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> np.
     new_model.add(Flatten())
     new_model.add(Dense(units=n_components, activation="relu"))
 
-    #set weights of the first layer
+    # Set weights of the trained autoencoder to the encoder model
     enc_len = len(model.layers) // 2
     for i, layer in enumerate(model.layers[:enc_len]):
-        print(i)
         new_model.layers[i].set_weights(layer.get_weights())
 
-    #compile it after setting the weights
+    # Compile it after setting the weights
     new_model.compile(optimizer='adam', loss='categorical_crossentropy')
     
-    plt.figure(figsize=(20, 4))
-    for i in range(5):
-        # Display original
-        ax = plt.subplot(2, 5, i + 1)
-        plt.imshow(test_X[i].reshape(28, 28))
-        plt.gray()
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-
-        # Display reconstruction
-        ax = plt.subplot(2, 5, i + 1 + 5)
-        plt.imshow(pred[i].reshape(28, 28))
-        plt.gray()
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-    plt.show()
-
     return new_model.predict(train_X), new_model.predict(test_X)
 
 
