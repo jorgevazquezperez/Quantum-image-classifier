@@ -37,14 +37,6 @@ class UnaryLoader(Encoding):
 
         super().__init__("Unary encoding")
 
-    @property
-    def circuit(self) -> QuantumCircuit:
-        return self._circuit
-
-    @circuit.setter
-    def circuit(self, circuit: QuantumCircuit) -> None:
-        self._circuit = circuit
-
     def _generate_circuit(self, betas: np.ndarray) -> None:
         """
         Function to generate the circuit with the info of the real data.

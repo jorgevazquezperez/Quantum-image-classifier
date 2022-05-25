@@ -1,5 +1,6 @@
 import numpy as np
 
+from qiskit import QuantumCircuit
 
 class Encoding:
     """
@@ -11,6 +12,15 @@ class Encoding:
             name: Name of the encoding.
         """
         self.name = name
+
+    @property
+    def circuit(self) -> QuantumCircuit:
+        return self._circuit
+
+    @circuit.setter
+    def circuit(self, circuit: QuantumCircuit) -> None:
+        self._circuit = circuit
+
 
     def _generate_circuit(self, input_vector: np.ndarray):
         """
