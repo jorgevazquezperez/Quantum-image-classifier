@@ -80,4 +80,5 @@ class QuantumAE():
                 z = counts['1'] / 1000
             else:
                 z = 0
-            return np.sqrt(z)
+            
+            
