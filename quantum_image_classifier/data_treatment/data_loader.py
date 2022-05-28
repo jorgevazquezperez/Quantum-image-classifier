@@ -39,6 +39,8 @@ def get_MNIST(n_components, reduction: str = "PCA") -> tuple:
     elif reduction == "AE_CNN":
         train_X, test_X = _do_AE_CNN(n_components, train_X, test_X)
     elif reduction == "None":
+        train_X = train_X.reshape((60000, 784))
+        test_X = test_X.reshape((10000, 784))
         return train_X, train_y, test_X, test_y
     else:
         raise OptionError()
