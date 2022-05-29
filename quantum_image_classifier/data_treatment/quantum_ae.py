@@ -67,7 +67,7 @@ class QuantumAE():
 
     def fit(self, dataset: np.ndarray = None) -> None:
 
-        opt = ADAM(lr=0.1, maxiter=500)
+        opt = ADAM(lr=0.1, maxiter=10)
 
         init_ae_params = np.random.uniform(low=0,
                                            high=np.pi,
@@ -106,8 +106,7 @@ class QuantumAE():
                 probabilities = counts / 1024
                 # Get state expectation
                 expectation += np.sum(states * probabilities)
-            print(self.i)
-            self.i += 1
+            print(expectation / len(dataset))
             return expectation / len(dataset)
 
         result_params = opt.minimize(loss, init_ae_params)
