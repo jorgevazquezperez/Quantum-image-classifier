@@ -9,31 +9,20 @@ from scipy.optimize import basinhopping
 from ..encoding import PhaseEncoding
 
 
-class QuantumAE():
+class QuantumAE2():
     def __init__(self, num_qubits: int, n_components: int):
         self.num_qubits = num_qubits
         self.n_trash = num_qubits - n_components
         self._build_autoencoder()
 
     def _build_autoencoder(self):
-
-        self._build_circuit()
-        self._build_SWAPTest(self.n_trash)
-
-        self.qregisters = QuantumRegister(
-            self.num_qubits + self.n_trash + 1, "q")
-        self.autoencoder = QuantumCircuit(self.qregisters, name="Autoencoder")
-        self.autoencoder.compose(
-            self.circuit, qubits=self.qregisters[self.n_trash + 1:], inplace=True)
-        self.autoencoder.compose(
-            self.swap_test, qubits=self.qregisters[:2*self.n_trash + 1], inplace=True)
-
-    def _build_circuit(self):
         N_PARAMETERS = self.num_qubits*4 + \
             self.num_qubits*(self.num_qubits - 1)
         self.params = ParameterVector('θ', N_PARAMETERS)
 
-        self.circuit = QuantumCircuit(self.num_qubits, name="Main circuit")
+        self.cregisters = ClassicalRegister(self.n_trash, "c")
+        self.qregisters = QuantumRegister(self.num_qubits, "q")
+        self.circuit = QuantumCircuit(self.cregisters, self.qregisters)
         self.circuit.barrier()
 
         weight_counter = 0
@@ -56,16 +45,9 @@ class QuantumAE():
             self.circuit.rz(self.params[weight_counter+1], i)
             weight_counter += 2
 
-    def _build_SWAPTest(self, n_trash):
-        qregisters = QuantumRegister(2*n_trash + 1, "q")
-        self.swap_test = QuantumCircuit(qregisters, name="SWAP test")
-        self.swap_test.barrier()
-
-        self.swap_test.h(qregisters[0])
-        for i in range(n_trash):
-            self.swap_test.cswap(
-                qregisters[0], qregisters[i+1], qregisters[n_trash+i+1])
-        self.swap_test.h(qregisters[0])
+        for i in range(self.n_trash):
+            self.circuit.measure(self.qregisters[i], self.cregisters[i])
+        
 
     def fit(self, dataset: np.ndarray = None) -> None:
 
@@ -78,21 +60,18 @@ class QuantumAE():
         self.states = []
         for point in dataset:
             self.states.append(PhaseEncoding(point))
-
-        print(self.states)
+        
         def loss(params):
             expectation = 0
             dict = {}
             for param, value in zip(self.params, params):
                 dict[param] = value
             for state in self.states:
-                cregister = ClassicalRegister(1, "c")
-                circ_aux = QuantumCircuit(self.qregisters, cregister)
+                circ_aux = QuantumCircuit(self.qregisters, self.cregisters)
                 circ_aux.compose(
-                    state.circuit, qubits=self.qregisters[self.n_trash + 1:], inplace=True)
-                circ_aux.compose(self.autoencoder,
-                                 qubits=self.qregisters, inplace=True)
-                circ_aux.measure(self.qregisters[0], cregister[0])
+                    state.circuit, qubits=self.qregisters, inplace=True)
+                circ_aux.compose(self.circuit,
+                                 qubits=self.qregisters, clbits=self.cregisters, inplace=True)
 
                 simulator = Aer.get_backend('aer_simulator')
                 t_qc = transpile(circ_aux,
@@ -104,14 +83,16 @@ class QuantumAE():
                 job = simulator.run(qobj)
                 result = job.result().get_counts()
 
-                counts = np.array(list(result.values()))
-                states = np.array(list(result.keys())).astype(float)
-                probabilities = counts / 1024
-                expectation += np.sum(states * probabilities)
+                counts = result["00"]
+                expectation += 1 - counts / 1024
 
-            return expectation / len(dataset)
-
-        """# perform the basin hopping search
+            return expectation / len(self.states)
+        
+        print(loss(pt))
+        
+        
+        """
+        # perform the basin hopping search
         result = basinhopping(loss, pt, stepsize=0.06, niter=20, disp=True)
         # summarize the result
         print('Status : %s' % result['message'])
