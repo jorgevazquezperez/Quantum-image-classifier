@@ -1,6 +1,7 @@
 import numpy as np
 from qiskit import Aer
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qat.interop.qiskit import qiskit_to_qlm
 
 from ..encoding import UnaryLoader
 
@@ -92,8 +93,14 @@ class NearestCentroid:
         inner = self._quantum_inner(circ_centroid, y, repetitions)
         dist = np.sqrt(norm_x**2 + norm_y**2 - 2 * norm_x * norm_y * inner)
         return dist
+    
+    def _classical_distance(self, x, y):
+        norm_x = np.linalg.norm(x)
+        norm_y = np.linalg.norm(y)
+        dist = np.sqrt(norm_x**2 + norm_y**2 - 2 * norm_x * norm_y * np.dot(x / norm_x, y / norm_y))
+        return dist
 
-    def _quantum_inner(self, circ_centroid: QuantumCircuit, y: np.ndarray, repetitions: int = 1000) -> float:
+    def _quantum_inner(self, circ_centroid: QuantumCircuit, y: np.ndarray, repetitions: int = 2000) -> float:
         """
         Inner product calculation of x (centroid) and y.
 
@@ -107,6 +114,7 @@ class NearestCentroid:
         circ_y = UnaryLoader(y, inverse=True).circuit.inverse()
         circuit = circ_centroid.compose(circ_y)
         circuit.measure([0], [0])
+
         simulator = Aer.get_backend('aer_simulator')
         result = simulator.run(circuit, shots=repetitions).result()
         counts = result.get_counts(circuit)
@@ -115,6 +123,10 @@ class NearestCentroid:
             z = counts['1'] / repetitions
         else:
             z = 0
+
+        #qlm_circuit = qiskit_to_qlm(circuit)
+        #print(qlm_circuit)
+
         return np.sqrt(z)
 
     def fit(self, X: np.ndarray = None, y: np.ndarray = None, n_dim: int = None) -> None:
@@ -129,7 +141,7 @@ class NearestCentroid:
             else:
                 raise AttributeError("You need to initialize the dataset.")
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray, test_distance: bool = False) -> np.ndarray:
         """
         Predicts the label of a batch of observations
 
@@ -141,14 +153,21 @@ class NearestCentroid:
         """
         if self.circ_centroids is not None:
             labels = []
+            difference = []
+            distance = []
             for x in X:
                 dist = {}
                 # For every x in the test set X we calculate the distance to each centroid and select the minimum 
                 for label, centroid in self.centroids.items():
                     dist[label] = self._quantum_distance(
                         self.circ_centroids[label], centroid, x)
+                    difference.append(dist[label] - self._classical_distance(centroid, x))
+                    distance.append(dist[label])
                 labels.append(min(dist, key=dist.get))
-            return np.array(labels)
+            if test_distance ==  True:
+                return np.array(labels), difference, distance
+            else:
+                return np.array(labels)
         else:
             raise AttributeError("Training set cannot be empty to predict.")
 

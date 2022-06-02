@@ -121,8 +121,13 @@ dmypy.json
 .pyre/
 
 #csvs
-.csv
+*.csv
 /data
 
 #main.py file
 main.py
+
+/analysis
+
+# Imagenes
+*.png
