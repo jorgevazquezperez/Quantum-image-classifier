@@ -126,8 +126,3 @@ dmypy.json
 
 #main.py file
 main.py
-
-/analysis
-
-# Imagenes
-*.png
