@@ -126,3 +126,6 @@ dmypy.json
 
 #main.py file
 main.py
+
+# Imagenes
+*.png
