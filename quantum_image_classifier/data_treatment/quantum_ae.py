@@ -111,16 +111,6 @@ class QuantumAE():
 
             return expectation / len(dataset)
 
-        """# perform the basin hopping search
-        result = basinhopping(loss, pt, stepsize=0.06, niter=20, disp=True)
-        # summarize the result
-        print('Status : %s' % result['message'])
-        print('Total Evaluations: %d' % result['nfev'])
-        # evaluate solution
-        solution = result['x']
-        evaluation = loss(solution)
-        print('Solution: f(%s) = %.5f' % (solution, evaluation))"""
-
         result = opt.minimize(loss, pt)
         # summarize the result
         print('Total Evaluations: %d' % result.nfev)

@@ -16,7 +16,7 @@ dirname = os.path.dirname(__file__)
 train = os.path.join(dirname, '../../data/mnist_train.csv')
 test = os.path.join(dirname, '../../data/mnist_test.csv')
 
-def get_MNIST(n_components, reduction: str = "PCA") -> tuple:
+def get_MNIST(n_components, reduction: str = "PCA", labels: np.ndarray = [0,1,2,3,4,5,6,7,8,9]) -> tuple:
     """
     Function to get the MNIST dataset and perform a dimension reduction to it.
     To perform the dimension reduction we can use:
@@ -31,6 +31,12 @@ def get_MNIST(n_components, reduction: str = "PCA") -> tuple:
     mnist = tk.datasets.mnist
     (train_X, train_y), (test_X, test_y) = mnist.load_data()
 
+    if not labels == [0,1,2,3,4,5,6,7,8,9]:
+        train_mask = np.isin(train_y, labels)
+        test_mask = np.isin(test_y, labels)
+        train_X, train_y = train_X[train_mask], train_y[train_mask]
+        test_X, test_y = test_X[test_mask], test_y[test_mask]
+
     if reduction == "PCA":
         # We apply PCA to each the training and the test dataset
         train_X, test_X = _do_PCA(n_components, train_X, test_X)
@@ -39,8 +45,8 @@ def get_MNIST(n_components, reduction: str = "PCA") -> tuple:
     elif reduction == "AE_CNN":
         train_X, test_X = _do_AE_CNN(n_components, train_X, test_X)
     elif reduction == "None":
-        train_X = train_X.reshape((60000, 784))
-        test_X = test_X.reshape((10000, 784))
+        train_X = train_X.reshape((len(train_X), 784))
+        test_X = test_X.reshape((len(test_X), 784))
         return train_X, train_y, test_X, test_y
     else:
         raise OptionError()
@@ -60,8 +66,8 @@ def _do_PCA(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple
     """
 
     # We reshape and standarize the data
-    train_X = train_X.reshape((60000, 784))
-    test_X = test_X.reshape((10000, 784))
+    train_X = train_X.reshape((len(train_X), 784))
+    test_X = test_X.reshape((len(test_X), 784))
     train_X = StandardScaler().fit_transform(train_X)
     test_X = StandardScaler().fit_transform(test_X)
     pca = PCA(n_components)
@@ -82,8 +88,8 @@ def _do_AE(encoding_dim: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple:
     Returns:
         tuple: with the train and test arrays preprocessed
     """
-    train_X = train_X.reshape((60000, 784))
-    test_X = test_X.reshape((10000, 784))
+    train_X = train_X.reshape((len(train_X), 784))
+    test_X = test_X.reshape((len(test_X), 784))
 
     # Autoencoder model creation
     input_img = Input(shape=(784,))
