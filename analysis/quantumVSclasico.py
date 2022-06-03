@@ -12,8 +12,6 @@ def distanceComparison():
     train_X, train_y, test_X, test_y = data_generator.generate_synthetic_data(
         n_dim, n_clusters, 1000)
     cloud_point(train_X, train_y, "./cloud_point_gen.png")
-    print("Primeros elementos DATOS GENERADOS:")
-    print(train_X[:10])
 
     quantum = quantumNC()
     quantum.fit(train_X, train_y, n_dim)
@@ -25,112 +23,62 @@ def distanceComparison():
     quantum = quantumNC()
     quantum.fit(train_X, train_y, n_dim)
     labels, differenceMNIST, distanceMNIST = quantum.predict(test_X, test_distance=True)
-    print("Primeros elementos DATOS MNIST:")
-    print(train_X[:10])
-    
+
     print("Generado: MEDIA {} DIFERENCIA {}".format(np.mean(distanceGen), np.mean(differenceGen)))
     print("MNIST: MEDIA {} DIFERENCIA {}".format(np.mean(distanceMNIST), np.mean(differenceMNIST)))
 
 
 def quantumVSclasico_gen():
     n_dim = 8
-    n_clusters = 4
-    quantum_labels = []
-    classical_labels = []
+    n_clusters = 2
+    accuracyQ = []
+    accuracyC = []
 
-    for _ in tqdm(range(1)):
+    for _ in range(1):
         train_X, train_y, test_X, test_y = data_generator.generate_synthetic_data(
             n_dim, n_clusters, 1000)
 
         quantum = quantumNC()
         quantum.fit(train_X, train_y, n_dim)
-        quantum_labels.append(quantum.predict(test_X))
+        labelsQ = quantum.predict(test_X)
 
         classical = classicalNC()
         classical.fit(train_X, train_y)
-        classical_labels.append(classical.predict(test_X))
+        labelsC = classical.predict(test_X)
+
+        accuracyQ.append(_calc_accuracy(test_y, labelsQ))
+        accuracyC.append(_calc_accuracy(test_y, labelsC))
 
     variance_error_graph(test_y, "./clasico_vs_cuantico_gen.png",
-                         ("NC clasico", classical_labels), ("NC cuántico", quantum_labels))
-
+                         ("NC clasico", accuracyC), ("NC cuántico", accuracyQ))
 
 def quantumVSclassic_MNIST():
     n_dim = 8
+    n_clusters = 2
+    accuracyQ = []
+    accuracyC = []
 
-    labels_2 = []
-    labels_4 = []
-    labels_6 = []
-    labels = []
-
-    classic_MNIST()
-    """
-    for _ in tqdm(range(1)):
-        train_X, train_y, test_X, test_y = data_loader.get_MNIST(n_dim, "PCA", [
-                                                                 1, 0])
-        quantum = quantumNC()
-        quantum.fit(train_X, train_y, n_dim)
-        labels_2.append(quantum.predict(test_X))
-
+    for _ in range(1):
         train_X, train_y, test_X, test_y = data_loader.get_MNIST(n_dim, "PCA", [
                                                                  1, 0, 6, 9])
+
         quantum = quantumNC()
         quantum.fit(train_X, train_y, n_dim)
-        labels_4.append(quantum.predict(test_X))
+        labelsQ = quantum.predict(test_X)
 
-        train_X, train_y, test_X, test_y = data_loader.get_MNIST(
-            n_dim, "PCA", [1, 0, 4, 5, 6, 9])
-        quantum = quantumNC()
-        quantum.fit(train_X, train_y, n_dim)
-        labels_6.append(quantum.predict(test_X))
+        classical = classicalNC()
+        classical.fit(train_X, train_y)
+        labelsC = classical.predict(test_X)
 
+        accuracyQ.append(_calc_accuracy(test_y, labelsQ))
+        accuracyC.append(_calc_accuracy(test_y, labelsC))
 
     variance_error_graph(test_y, "./clasico_vs_cuantico_MNIST.png",
-                         ("2 clases", labels_2), ("4 clases", labels_4), ("6 clases", labels_6))
-    """
-    
+                         ("NC clasico", accuracyC), ("NC cuántico", accuracyQ))
 
-def classic_MNIST():
-    n_dim = 8
-
-    accuracy_2 = []
-    accuracy_4 = []
-    accuracy_6 = []
-
-    for _ in tqdm(range(1)):
-        train_X, train_y, test_X, test_y = data_loader.get_MNIST(n_dim, "AE", [
-                                                                 1, 0])
-        classical = classicalNC()
-        classical.fit(train_X, train_y)
-        labels_2 = classical.predict(test_X)
-        counts = 0
-        for correct, predict in zip(test_y, labels_2):
-            if predict == correct:
-                counts += 1
-        print(counts / len(test_y))
-
-        quantum = quantumNC()
-        quantum.fit(train_X, train_y, n_dim)
-        labels_2 = quantum.predict(test_X)
-        counts = 0
-        for correct, predict in zip(test_y, labels_2):
-            if predict == correct:
-                counts += 1
-        print(counts / len(test_y))
-
-
-
-        """train_X, train_y, test_X, test_y = data_loader.get_MNIST(n_dim, "AE_CNN", [
-                                                                 1, 0, 6, 9])
-        classical = classicalNC()
-        classical.fit(train_X, train_y)
-        labels_4.append(classical.predict(test_X))
-
-        train_X, train_y, test_X, test_y = data_loader.get_MNIST(
-            n_dim, "AE_CNN", [1, 0, 4, 5, 6, 9])
-        classical = classicalNC()
-        classical.fit(train_X, train_y)
-        labels_6.append(classical.predict(test_X))
-
-
-    variance_error_graph(test_y, "./clasico_vs_cuantico_MNIST.png",
-                         ("2 clases", labels_2), ("4 clases", labels_4), ("6 clases", labels_6))"""
+def _calc_accuracy(labels, predictions):
+    counts = 0
+    for label, prediction in zip(labels, predictions):
+        if prediction == label:
+            counts += 1
+    return counts / len(labels)

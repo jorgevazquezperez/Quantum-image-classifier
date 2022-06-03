@@ -1,7 +1,6 @@
 import numpy as np
 from qiskit import Aer
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
-from qat.interop.qiskit import qiskit_to_qlm
 
 from ..encoding import UnaryLoader
 

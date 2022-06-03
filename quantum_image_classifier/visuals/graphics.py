@@ -29,12 +29,7 @@ def variance_error_graph(y_test: np.ndarray, img_name: str, *args):
     error = []
     for prediction in args:
         names.append(prediction[0])
-        for iteration in prediction[1]:
-            counts = 0
-            for i, y in enumerate(iteration):
-                if y == y_test[i]:
-                    counts += 1
-            accuracy.append(counts / len(y_test))
+        accuracy.append(prediction[1])
         CTEs.append(np.mean(accuracy))
         error.append(np.std(accuracy))
 

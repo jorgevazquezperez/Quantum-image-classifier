@@ -11,12 +11,10 @@ def generate_synthetic_data(n_dim: int, n_clusters: int, n_samples: int) -> tupl
     Return:
         tuple: containing the set of training and test values, with their associated labels
     """
-    random_state = 42
 
     X, y = make_blobs(n_samples=n_samples, 
                     n_features=n_dim, 
-                    centers=n_clusters, 
-                    random_state=random_state)
+                    centers=n_clusters)
 
     train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.2)
     train_X = np.array(train_X) - train_X.min()

@@ -153,6 +153,9 @@ def _do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> tu
     # Scalate the data and fit the model
     train_X = train_X.astype('float32') / 255.
     test_X = test_X.astype('float32') / 255.
+
+    train_X = train_X.reshape(len(train_X), 28, 28, 1)
+    test_X = test_X.reshape(len(test_X), 28, 28, 1)
     model.fit(train_X, train_X, epochs=8, batch_size=128, validation_data=(test_X, test_X))
     
     # Create new model to get the data encoded
