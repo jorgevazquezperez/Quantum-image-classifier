@@ -1,5 +1,7 @@
+python=3.9
 numpy>=1.21.6
-qiskit
+qiskit-terra>=0.20.0
+qiskit-aer
 setuptools>=40.1.0
 sklearn
 matplotlib

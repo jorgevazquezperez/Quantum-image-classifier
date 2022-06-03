@@ -19,6 +19,8 @@ def error_graph(y_test: np.ndarray, *args):
     ax.set_title('Scores by group and gender')
     ax.bar(names,accuracy)
     plt.savefig('accuracy_methods.png')
+    plt.close(fig)
+
 
 def variance_error_graph(y_test: np.ndarray, img_name: str, *args):
     names = []
@@ -28,7 +30,6 @@ def variance_error_graph(y_test: np.ndarray, img_name: str, *args):
         names.append(prediction[0])
         CTEs.append(np.mean(prediction[1]))
         error.append(np.std(prediction[1]))
-
 
     x_pos = np.arange(len(args))
 
@@ -46,6 +47,7 @@ def variance_error_graph(y_test: np.ndarray, img_name: str, *args):
     # Save the figure and show
     plt.tight_layout()
     plt.savefig(img_name)
+    plt.close(fig)
 
 def cloud_point(data, labels, img_name):
 

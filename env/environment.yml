@@ -8,6 +8,7 @@ dependencies:
 - numpy>=1.21.6
 - setuptools>=40.1.0
 - pip
+- sklearn
 - matplotlib
 - pandas
 - keras
@@ -15,4 +16,3 @@ dependencies:
 - pip:
   - qiskit
   - qlmaas
-  - sklearn
