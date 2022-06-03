@@ -129,3 +129,5 @@ main.py
 
 # Imagenes
 *.png
+
+/analysis

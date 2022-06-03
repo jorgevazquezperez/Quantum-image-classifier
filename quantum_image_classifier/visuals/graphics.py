@@ -24,14 +24,13 @@ def error_graph(y_test: np.ndarray, *args):
 
 def variance_error_graph(y_test: np.ndarray, img_name: str, *args):
     names = []
-    accuracy = []
     CTEs = []
     error = []
     for prediction in args:
         names.append(prediction[0])
-        accuracy.append(prediction[1])
-        CTEs.append(np.mean(accuracy))
-        error.append(np.std(accuracy))
+        CTEs.append(np.mean(prediction[1]))
+        error.append(np.std(prediction[1]))
+
 
     x_pos = np.arange(len(args))
 
