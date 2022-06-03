@@ -1,4 +1,3 @@
-from cProfile import label
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -20,7 +19,6 @@ def error_graph(y_test: np.ndarray, *args):
     ax.set_title('Scores by group and gender')
     ax.bar(names,accuracy)
     plt.savefig('accuracy_methods.png')
-    plt.show()
 
 def variance_error_graph(y_test: np.ndarray, img_name: str, *args):
     names = []
@@ -48,7 +46,6 @@ def variance_error_graph(y_test: np.ndarray, img_name: str, *args):
     # Save the figure and show
     plt.tight_layout()
     plt.savefig(img_name)
-    plt.show()
 
 def cloud_point(data, labels, img_name):
 
@@ -64,5 +61,4 @@ def cloud_point(data, labels, img_name):
 
     plt.scatter(x, y, c=colors)
     plt.savefig(img_name)
-    plt.show()
 

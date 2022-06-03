@@ -57,6 +57,6 @@ setuptools.setup(
         "quantum_image_classifier.data_treatment" ],
     install_requires=REQUIREMENTS,
     include_package_data=True,
-    python_requires=">=3.7",
+    python_requires="<3.10",
     zip_safe=False
 )
