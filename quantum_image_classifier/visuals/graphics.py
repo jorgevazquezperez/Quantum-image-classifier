@@ -1,7 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def error_graph(y_test: np.ndarray, *args):
+def error_graph(y_test: np.ndarray, *args: tuple) -> None:
+    """
+    Function to show the average accuracy of the method.
+
+    Args:
+        y_test: labels of the test set
+        *args: tuples with the names of the method (reduction method, number of clusters...) 
+        and its prediction
+    """
+
+    # Calculate the accuracy
     names = []
     accuracy = []
     for prediction in args:
@@ -12,6 +22,7 @@ def error_graph(y_test: np.ndarray, *args):
                 counts += 1
         accuracy.append(counts / len(y_test))
 
+    # Show and save the plot
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.set_ylabel('Accuracy')
@@ -19,10 +30,19 @@ def error_graph(y_test: np.ndarray, *args):
     ax.set_title('Scores by group and gender')
     ax.bar(names,accuracy)
     plt.savefig('accuracy_methods.png')
+    plt.show()
     plt.close(fig)
 
 
-def variance_error_graph(y_test: np.ndarray, img_name: str, *args):
+def variance_error_graph(img_name: str, *args: tuple) -> None:
+    """
+    Function to show the average accuracy of the method along with the standard deviation.
+
+    Args:
+        img_name: name to store the image
+        *args: tuples with the names of the method (reduction method, number of clusters...) 
+        and its accuracy precalculated
+    """
     names = []
     CTEs = []
     error = []
@@ -50,7 +70,14 @@ def variance_error_graph(y_test: np.ndarray, img_name: str, *args):
     plt.close(fig)
 
 def cloud_point(data, labels, img_name):
+    """
+    Function to show a cloud point plot with two clases with diferent colors.
 
+    Args:
+        data: data to be represented
+        labels: labels associated to each point of data
+        img_name: name to store the image
+    """
     colors = []
     for i in labels:
         if i == 0:
@@ -62,5 +89,6 @@ def cloud_point(data, labels, img_name):
     y = [i[1] for i in data]
 
     plt.scatter(x, y, c=colors)
+    plt.show()
     plt.savefig(img_name)
 

@@ -18,5 +18,7 @@ class Encoding:
 
         Args:
             input_vector: Real data
+        Raise:
+            NotImplementedError
         """
         raise NotImplementedError()

@@ -1,3 +1,4 @@
+from typing import Union
 import numpy as np
 from qiskit import Aer
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
@@ -48,13 +49,8 @@ class NearestCentroid:
 
         self.circ_centroids = {}
         for label, centroid in self.centroids.items():
-            
             # After we calculate each centroid, we create its respective circuit
-            qregisters = QuantumRegister(self.n_dim, "q")
-            cregisters = ClassicalRegister(1, "c")
-            circ_centroid = QuantumCircuit(qregisters, cregisters)
-            circ_centroid.x(qregisters[0])
-            circ_centroid.compose(UnaryLoader(centroid).circuit, inplace=True)
+            circ_centroid = UnaryLoader(centroid).circuit
             self.circ_centroids[label] = circ_centroid
     
     def _calc_centroids(self) -> dict:
@@ -73,8 +69,8 @@ class NearestCentroid:
 
     def _quantum_distance(self, circ_centroid: QuantumCircuit, centroid: np.ndarray, y: np.ndarray, repetitions: int = 1000) -> float:
         """
-        Calculates the distance between x (centroid) and y using circuit to calculate the inner product. The distance is the
-        euclidean distance, represented by the formula:
+        Calculates the distance between x (centroid) and y using a quantum circuit to calculate the inner product. 
+        The distance is the euclidean distance, represented by the formula:
 
         dist = sqrt(||x||**2 + ||y||**2 - 2*||x||*||y||*inner)
 
@@ -83,7 +79,8 @@ class NearestCentroid:
         Args:
             circ_centroid: Unary loader of the centroid
             centroid: First vector to perform the distance
-            y: First vector to perform the distance
+            y: Second vector to perform the distance
+            repetitions: Times we simulate the circuit
         Returns:
             float: distance between x and y
         """
@@ -93,25 +90,41 @@ class NearestCentroid:
         dist = np.sqrt(norm_x**2 + norm_y**2 - 2 * norm_x * norm_y * inner)
         return dist
     
-    def _classical_distance(self, x, y):
+    def _classical_distance(self, x: np.ndarray, y: np.ndarray) -> float:
+        """
+        Calculates the distance between x (centroid) and y using the classical version. The distance is the
+        euclidean distance, represented by the formula:
+
+        dist = sqrt(||x||**2 + ||y||**2 - 2*||x||*||y||*inner)
+
+        where inner = <x|y>, i.e., inner product between x and y.
+
+        Args:
+            x: First vector to perform the distance
+            y: Second vector to perform the distance
+        Returns:
+            float: distance between x and y
+        """
+
         norm_x = np.linalg.norm(x)
         norm_y = np.linalg.norm(y)
         dist = np.sqrt(norm_x**2 + norm_y**2 - 2 * norm_x * norm_y * np.dot(x / norm_x, y / norm_y))
         return dist
 
-    def _quantum_inner(self, circ_centroid: QuantumCircuit, y: np.ndarray, repetitions: int = 2000) -> float:
+    def _quantum_inner(self, circ_centroid: QuantumCircuit, x: np.ndarray, repetitions: int = 2000) -> float:
         """
         Inner product calculation of x (centroid) and y.
 
         Args:
             circ_centroid: Unary loader of the centroid
-            y: First vector to perform the distance
+            x: First vector to perform the distance
+            repetitions: Times we simulate the circuit
         Returns:
             float: inner product between a centroid and y
         """ 
         # We execute the circuit a defined times of repetitions
-        circ_y = UnaryLoader(y, inverse=True).circuit.inverse()
-        circuit = circ_centroid.compose(circ_y)
+        circ_x = UnaryLoader(x, inverse=True).circuit
+        circuit = circ_centroid.compose(circ_x)
         circuit.measure([0], [0])
 
         simulator = Aer.get_backend('aer_simulator')
@@ -129,6 +142,17 @@ class NearestCentroid:
         return np.sqrt(z)
 
     def fit(self, X: np.ndarray = None, y: np.ndarray = None, n_dim: int = None) -> None:
+        """
+        Calculates the centroids of the training data classically.
+
+        Args:
+            X: Train data values of dimension l
+            y: Train data labels of dimension l 
+            n_dim: Dimension of each value of the training set
+        Raise:
+            AttributeError: if the training set is not initialize and it is not passed as argument
+            to the function
+        """
         if (X is not None) and (y is not None):
             self.train_X = X
             self.train_y = y
@@ -140,15 +164,20 @@ class NearestCentroid:
             else:
                 raise AttributeError("You need to initialize the dataset.")
 
-    def predict(self, X: np.ndarray, test_distance: bool = False) -> np.ndarray:
+    def predict(self, X: np.ndarray, test_distance: bool = False) -> Union[tuple,np.ndarray]:
         """
-        Predicts the label of a batch of observations
+        Predicts the label of a batch of observations and, if test_distance == True
+        returns the difference between classical and quantum distance (the error of the 
+        quantum distance), along with the average distance calculated.
 
         Args:
             X: Test data values of dimension l
-            y: Test data labels of dimension l
+            test_distance: boolean which determines wheter to return the average distance
+            calculated along with the error of the quantum distance.
         Returns:
             nd.ndarray: with the label of each observation in the batch
+            tuple: with the label of each observation, the average distance calculated and
+            the error of the quantum distance
         """
         if self.circ_centroids is not None:
             labels = []

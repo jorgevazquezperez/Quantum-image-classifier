@@ -16,7 +16,7 @@ dirname = os.path.dirname(__file__)
 train = os.path.join(dirname, '../../data/mnist_train.csv')
 test = os.path.join(dirname, '../../data/mnist_test.csv')
 
-def get_MNIST(n_components, reduction: str = "PCA", labels: np.ndarray = [0,1,2,3,4,5,6,7,8,9]) -> tuple:
+def get_MNIST(n_components, reduction: str = "PCA", labels: np.ndarray = [0,1,2,3,4,5,6,7,8,9], visualize: bool = True) -> tuple:
     """
     Function to get the MNIST dataset and perform a dimension reduction to it.
     To perform the dimension reduction we can use:
@@ -27,23 +27,29 @@ def get_MNIST(n_components, reduction: str = "PCA", labels: np.ndarray = [0,1,2,
     Args:
         n_components: number of components to which we reduce the data
         reduction: type of reduction we will use
+        labels: labels that will be read of the whole dataset
+        visualize: bool determining wheter to save the reconstruction of the
+        points or not
+    Raise:
+        OptionError: if the reduction method is not implemented
     """
     mnist = tk.datasets.mnist
     (train_X, train_y), (test_X, test_y) = mnist.load_data()
 
+    # Filter the dataset by labels
     if not labels == [0,1,2,3,4,5,6,7,8,9]:
         train_mask = np.isin(train_y, labels)
         test_mask = np.isin(test_y, labels)
         train_X, train_y = train_X[train_mask], train_y[train_mask]
         test_X, test_y = test_X[test_mask], test_y[test_mask]
 
+    # Perform the selected method (or None)
     if reduction == "PCA":
-        # We apply PCA to each the training and the test dataset
-        train_X, test_X = _do_PCA(n_components, train_X, test_X)
+        train_X, test_X = _do_PCA(n_components, train_X, test_X, visualize)
     elif reduction == "AE":
-        train_X, test_X = _do_AE(n_components, train_X, test_X)
+        train_X, test_X = _do_AE(n_components, train_X, test_X, visualize)
     elif reduction == "AE_CNN":
-        train_X, test_X = _do_AE_CNN(n_components, train_X, test_X)
+        train_X, test_X = _do_AE_CNN(n_components, train_X, test_X, visualize)
     elif reduction == "None":
         train_X = train_X.reshape((len(train_X), 784))
         test_X = test_X.reshape((len(test_X), 784))
@@ -54,13 +60,16 @@ def get_MNIST(n_components, reduction: str = "PCA", labels: np.ndarray = [0,1,2,
     return train_X, train_y, test_X, test_y
 
 
-def _do_PCA(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple:
+def _do_PCA(n_components: int, train_X: np.ndarray, test_X: np.ndarray, visualize: bool = False) -> tuple:
     """
     Function to perform PCA to a given data.
 
     Args:
         n_components: number of components to which we reduce the data
-        data: the info we want to apply PCA to
+        train_X: the train set we want to apply PCA to
+        test_X: the test set we want to apply PCA to
+        visualize: bool determining wheter to save the reconstruction of the
+        points or not
     Returns:
         tuple: with the train and test arrays preprocessed
     """
@@ -68,6 +77,8 @@ def _do_PCA(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple
     # We reshape and standarize the data
     train_X = train_X.reshape((len(train_X), 784))
     test_X = test_X.reshape((len(test_X), 784))
+    test_X_original = test_X[:]
+
     train_X = StandardScaler().fit_transform(train_X)
     test_X = StandardScaler().fit_transform(test_X)
     pca = PCA(n_components)
@@ -76,18 +87,26 @@ def _do_PCA(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple
     train_X = pca.fit_transform(train_X)
     test_X = pca.fit_transform(test_X)
 
+    if visualize is True:
+        reconstruction = pca.inverse_transform(test_X)
+        _visualize_MNIST_pred(test_X_original, reconstruction, "./pca_results.png")
+
+    # Substract by the minimum to make all data positive without
+    # modifying the space
     train_X = np.array(train_X) - train_X.min()
     test_X = np.array(test_X) - test_X.min()
-
     return train_X, test_X
 
-def _do_AE(encoding_dim: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple:
+def _do_AE(encoding_dim: int, train_X: np.ndarray, test_X: np.ndarray, visualize: bool = False) -> tuple:
     """
     Function to apply a simple autoencoder to a given data.
 
     Args:
         n_components: number of components to which we reduce the data
-        data: the info we want to apply the simple autoencoder to
+        train_X: the train set we want to apply AE to
+        test_X: the test set we want to apply AE to
+        visualize: bool determining wheter to save the reconstruction of the
+        points or not
     Returns:
         tuple: with the train and test arrays preprocessed
     """
@@ -112,20 +131,36 @@ def _do_AE(encoding_dim: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple:
                 batch_size=256,
                 validation_data=(test_X, test_X))
 
+    if visualize is True:
+        # Creating a decoder model
+        encoded_input = Input(shape=(encoding_dim,))
+        # last layer of the autoencoder model
+        decoder_layer = autoencoder.layers[-1]
+        # decoder model
+        decoder = Model(encoded_input, decoder_layer(encoded_input))
+        encoded_img = encoder.predict(test_X)
+        decoded_img = decoder.predict(encoded_img)
+        _visualize_MNIST_pred(test_X, decoded_img, "./ae_simple_results.png")
+
     train_X = encoder.predict(train_X)
     test_X = encoder.predict(test_X)
+
+    # Substract by the minimum to make all data positive without
+    # modifying the space
     train_X = np.array(train_X) - train_X.min()
     test_X = np.array(test_X) - test_X.min()
-    
     return train_X, test_X
 
-def _do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> tuple:
+def _do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray, visualize: bool = False) -> tuple:
     """
     Function to apply a autoencoder based on a CNN to a given data.
 
     Args:
         n_components: number of components to which we reduce the data
-        data: the info we want to apply the autoencoder based on a CNN to
+        train_X: the train set we want to apply AE based on CNN to
+        test_X: the test set we want to apply AE based on CNN to
+        visualize: bool determining wheter to save the reconstruction of the
+        points or not
     Returns:
         tuple: with the train and test arrays preprocessed
     """
@@ -174,14 +209,38 @@ def _do_AE_CNN(n_components: int, train_X: np.ndarray, test_X: np.ndarray) -> tu
 
     # Compile it after setting the weights
     new_model.compile(optimizer='adam', loss='categorical_crossentropy')
+
+    if visualize is True:
+        _visualize_MNIST_pred(test_X, model.predict(test_X), "./ae_cnn_results.png")
     
     train_X = new_model.predict(train_X)
     test_X = new_model.predict(test_X)
+
+    # Substract by the minimum to make all data positive without
+    # modifying the space
     train_X = np.array(train_X) - train_X.min()
     test_X = np.array(test_X) - test_X.min()
-
     return train_X, test_X
 
+def _visualize_MNIST_pred(test_X: np.ndarray, prediction: np.ndarray, name: str):
+    """ Function to show the first 5 reconstructions """
 
+    plt.figure(figsize=(20, 4))
+    for i in range(5):
+        
+        # Display original
+        ax = plt.subplot(2, 5, i + 1)
+        plt.imshow(test_X[i].reshape(28, 28))
+        plt.gray()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
 
+        # Display reconstruction
+        ax = plt.subplot(2, 5, i + 1 + 5)
+        plt.imshow(prediction[i].reshape(28, 28))
+        plt.gray()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+    plt.savefig(name)
+    plt.show()
 

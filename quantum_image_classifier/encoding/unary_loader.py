@@ -1,5 +1,5 @@
 import numpy as np
-from qiskit import QuantumRegister, QuantumCircuit
+from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit
 
 from .encoding import Encoding
 from ..gates import RBS
@@ -28,12 +28,18 @@ class UnaryLoader(Encoding):
         """
         self.num_qubits = int(len(input_vector))
         self.quantum_data = QuantumRegister(self.num_qubits)
-        self.circuit = QuantumCircuit(self.quantum_data)
+        self.classical_data = ClassicalRegister(1)
+        self.circuit = QuantumCircuit(self.quantum_data, self.classical_data)
         newx = np.copy(input_vector)
 
         betas = []
         self._theta_calc(newx, betas)
-        self._generate_circuit(betas)
+        if not inverse:
+            self.circuit.x(self.quantum_data[0])
+            self._generate_circuit(betas)
+        else:
+            self._generate_circuit(betas)
+            self.circuit = self.circuit.inverse()
 
         super().__init__("Unary encoding")
 
