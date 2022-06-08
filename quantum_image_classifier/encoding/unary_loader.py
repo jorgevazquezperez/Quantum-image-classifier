@@ -64,8 +64,8 @@ class UnaryLoader(Encoding):
         for i in range(logarithm):
             for k in range(2**i):
                 w = self.num_qubits // 2**i
-                self.circuit.unitary(RBS(betas[2**i + k - 1]).rbs, [self.quantum_data[k*w],
-                                                                    self.quantum_data[k*w + w // 2]], label="RBS({})".format(np.around(betas[2**i + k - 1], 3)))
+                self.circuit.append(RBS(betas[2**i + k - 1]).rbs, [self.quantum_data[k*w],
+                                                                    self.quantum_data[k*w + w // 2]])
 
     def _theta_calc(self, input_vector: np.ndarray, betas: np.ndarray) -> None:
         """
