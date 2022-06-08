@@ -20,8 +20,8 @@ def generate_synthetic_data(n_dim: int, n_clusters: int, n_samples: int) -> tupl
     # Create the clusters with data
     X, y = make_blobs(n_samples=n_samples, 
                     n_features=n_dim, 
-                    centers=n_clusters)
-    train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.2)
+                    centers=n_clusters, random_state=42)
+    train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Substract by the minimum to make all data positive without
     # modifying the space
