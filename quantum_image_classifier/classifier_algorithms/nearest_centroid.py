@@ -5,6 +5,8 @@ from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 
 from ..encoding import UnaryLoader
 
+from qat.interop.qiskit import qiskit_to_qlm
+
 
 class NearestCentroid:
     """Nearest Centroid classifier.
@@ -127,6 +129,9 @@ class NearestCentroid:
         circuit = circ_centroid.compose(circ_x)
         circuit.measure([0], [0])
 
+        qlm_circuit = qiskit_to_qlm(circuit)
+        print(qlm_circuit)
+
         simulator = Aer.get_backend('aer_simulator')
         result = simulator.run(circuit, shots=repetitions).result()
         counts = result.get_counts(circuit)
@@ -135,9 +140,6 @@ class NearestCentroid:
             z = counts['1'] / repetitions
         else:
             z = 0
-
-        #qlm_circuit = qiskit_to_qlm(circuit)
-        #print(qlm_circuit)
 
         return np.sqrt(z)
 
