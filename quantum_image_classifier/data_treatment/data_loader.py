@@ -16,7 +16,7 @@ dirname = os.path.dirname(__file__)
 train = os.path.join(dirname, '../../data/mnist_train.csv')
 test = os.path.join(dirname, '../../data/mnist_test.csv')
 
-def get_MNIST(n_components, reduction: str = "PCA", labels: np.ndarray = [0,1,2,3,4,5,6,7,8,9], visualize: bool = True) -> tuple:
+def get_MNIST(n_components, reduction: str = "PCA", labels: np.ndarray = [0,1,2,3,4,5,6,7,8,9], visualize: bool = False) -> tuple:
     """
     Function to get the MNIST dataset and perform a dimension reduction to it.
     To perform the dimension reduction we can use:

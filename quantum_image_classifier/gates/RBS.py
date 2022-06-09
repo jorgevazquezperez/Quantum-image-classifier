@@ -14,7 +14,7 @@ class RBS:
         self.rbs = qi.Operator([ [1, 0,  0, 0],
                                  [0, a,  b, 0],
                                  [0, -b, a, 0],
-                                 [0, 0,  0, 1]])
+                                 [0, 0,  0, 1]]).to_instruction()
         
     @property
     def rbs(self):
