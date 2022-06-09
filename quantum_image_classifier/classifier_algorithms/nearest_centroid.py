@@ -4,8 +4,9 @@ from qiskit import Aer
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 
 from ..encoding import UnaryLoader
+from ..CESGA_connection import CESGAQPUToBackend
 
-from qat.interop.qiskit import qiskit_to_qlm
+from qat.pylinalg import PyLinalg
 
 
 class NearestCentroid:
@@ -129,12 +130,17 @@ class NearestCentroid:
         circuit = circ_centroid.compose(circ_x)
         circuit.measure([0], [0])
 
-        qlm_circuit = qiskit_to_qlm(circuit)
-        print(qlm_circuit)
-
+        """
+        qpu=PyLinalg()
+        backend=CESGAQPUToBackend(qpu)
+        job=backend.run(circuit, shots=repetitions).result()
+        counts = job.get_counts()
+        """
+        
         simulator = Aer.get_backend('aer_simulator')
         result = simulator.run(circuit, shots=repetitions).result()
         counts = result.get_counts(circuit)
+        
 
         if '1' in counts.keys():
             z = counts['1'] / repetitions

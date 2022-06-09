@@ -2,7 +2,7 @@ import numpy as np
 from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit
 
 from .encoding import Encoding
-from ..gates import RBS
+from ..gates import iRBS
 
 
 class UnaryLoader(Encoding):
@@ -64,8 +64,8 @@ class UnaryLoader(Encoding):
         for i in range(logarithm):
             for k in range(2**i):
                 w = self.num_qubits // 2**i
-                self.circuit.append(RBS(betas[2**i + k - 1]).rbs, [self.quantum_data[k*w],
-                                                                    self.quantum_data[k*w + w // 2]])
+                self.circuit.compose(iRBS(betas[2**i + k - 1]).irbs, [self.quantum_data[k*w],
+                                                                    self.quantum_data[k*w + w // 2]], inplace=True)
 
     def _theta_calc(self, input_vector: np.ndarray, betas: np.ndarray) -> None:
         """
