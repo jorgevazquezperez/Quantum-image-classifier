@@ -27,16 +27,18 @@ class NearestCentroid:
 
     """
 
-    def __init__(self, X: np.ndarray = None, y: np.ndarray = None, n_dim: int = None) -> None:
+    def __init__(self, X: np.ndarray = None, y: np.ndarray = None, n_dim: int = None, CESGA_conn: bool = False) -> None:
         """
 
         Args:
             X: Training data values of dimension k or None
             y: Training data labels of dimension k or None
             n_dim: Dimension of the training dataset, i.e., k or None
+            CESGA_conn: Flag to decide if we use the special Backend or not
         Raise: 
             AttributeError: In case some attributes have values and others are empty
         """
+        self.CESGA_conn = CESGA_conn
         if (X is not None) and (y is not None) and (n_dim is not None):
             self.train_X = X
             self.train_y = y
@@ -130,16 +132,15 @@ class NearestCentroid:
         circuit = circ_centroid.compose(circ_x)
         circuit.measure([0], [0])
 
-        """
-        qpu=PyLinalg()
-        backend=CESGAQPUToBackend(qpu)
-        job=backend.run(circuit, shots=repetitions).result()
-        counts = job.get_counts()
-        """
-        
-        simulator = Aer.get_backend('aer_simulator')
-        result = simulator.run(circuit, shots=repetitions).result()
-        counts = result.get_counts(circuit)
+        if self.CESGA_conn:
+            qpu=PyLinalg()
+            backend=CESGAQPUToBackend(qpu)
+            job=backend.run(circuit, shots=repetitions).result()
+            counts = job.get_counts()
+        else:
+            simulator = Aer.get_backend('aer_simulator')
+            result = simulator.run(circuit, shots=repetitions).result()
+            counts = result.get_counts(circuit)
         
 
         if '1' in counts.keys():

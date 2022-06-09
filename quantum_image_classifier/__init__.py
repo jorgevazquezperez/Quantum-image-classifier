@@ -11,6 +11,6 @@ implemented can be used with :mod:`~quantum_image_classifier.NAME_OF_THE_ALGORIT
 from .classifier_algorithms import NearestCentroid
 from .data_treatment import data_generator, data_loader
 from .encoding import UnaryLoader
-from .gates import RBS, iRBS
+from .gates import RBS
 from .visuals import error_graph, variance_error_graph, cloud_point
 from .CESGA_connection import CESGAQPUToBackend
