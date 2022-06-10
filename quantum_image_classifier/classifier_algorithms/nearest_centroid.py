@@ -33,8 +33,8 @@ class NearestCentroid:
         Args:
             X: Training data values of dimension k or None
             y: Training data labels of dimension k or None
-            n_dim: Dimension of the training dataset, i.e., k or None
-            CESGA_conn: Flag to decide if we use the special Backend or not
+            n_dim: Dimension of the values of the training dataset, i.e., k or None
+            CESGA_conn: Flag to decide if we use the CESGA Backend or not
         Raise: 
             AttributeError: In case some attributes have values and others are empty
         """

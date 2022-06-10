@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
-def error_graph(y_test: np.ndarray, *args: tuple) -> None:
+def error_graph(img_name: str, *args: tuple) -> None:
     """
-    Function to show the average accuracy of the method.
+    Function to show the accuracy of one iteration.
 
     Args:
         y_test: labels of the test set
@@ -16,11 +17,7 @@ def error_graph(y_test: np.ndarray, *args: tuple) -> None:
     accuracy = []
     for prediction in args:
         names.append(prediction[0])
-        counts = 0
-        for i, y in enumerate(prediction[1]):
-            if y == y_test[i]:
-                counts += 1
-        accuracy.append(counts / len(y_test))
+        accuracy.append(prediction[1])
 
     # Show and save the plot
     fig = plt.figure()
@@ -29,14 +26,15 @@ def error_graph(y_test: np.ndarray, *args: tuple) -> None:
     ax.set_xlabel('Method used')
     ax.set_title('Scores by group and gender')
     ax.bar(names,accuracy)
-    plt.savefig('accuracy_methods.png')
+    plt.savefig(img_name)
     plt.show()
     plt.close(fig)
 
 
 def variance_error_graph(img_name: str, *args: tuple) -> None:
     """
-    Function to show the average accuracy of the method along with the standard deviation.
+    Function to show the average accuracy of the method along with the standard deviation
+    of multiple executions.
 
     Args:
         img_name: name to store the image
@@ -67,9 +65,10 @@ def variance_error_graph(img_name: str, *args: tuple) -> None:
     # Save the figure and show
     plt.tight_layout()
     plt.savefig(img_name)
+    plt.show()
     plt.close(fig)
 
-def cloud_point(data, labels, img_name):
+def cloud_point(data: np.ndarray, labels: np.ndarray, img_name: str, n_labels: int):
     """
     Function to show a cloud point plot with two clases with diferent colors.
 
@@ -77,13 +76,13 @@ def cloud_point(data, labels, img_name):
         data: data to be represented
         labels: labels associated to each point of data
         img_name: name to store the image
+        n_labels: number of types of labels
     """
     colors = []
-    for i in labels:
-        if i == 0:
-            colors.append("red")
-        else:
-            colors.append("blue")
+    type_color = ["#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+             for _ in range(n_labels)]
+    for label in labels:
+        colors.append(type_color[label])
     
     x = [i[0] for i in data]
     y = [i[1] for i in data]
