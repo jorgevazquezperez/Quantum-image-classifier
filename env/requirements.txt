@@ -1,9 +1,12 @@
-numpy>=1.21.6
-qiskit
-setuptools>=40.1.0
+numpy
+qiskit-terra
+qiskit-aer
+setuptools
 sklearn
 matplotlib
 pandas
 keras
 tensorflow
 qlmaas
+myqlm
+myqlm-interop[qiskit_binder]
